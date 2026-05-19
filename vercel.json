@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/", "destination": "/output/dashboard-pro.html" },
+    { "source": "/classic", "destination": "/output/dashboard-enhanced.html" },
+    { "source": "/list", "destination": "/output/dashboard-live.html" },
+    { "source": "/map", "destination": "/output/dashboard-map.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=60, s-maxage=60" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
