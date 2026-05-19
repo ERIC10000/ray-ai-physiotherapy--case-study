@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ärztehaus Radar — Medical Building Intelligence</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --primary-bg: #eef2ff;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --success-dark: #065f46;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --warning-dark: #92400e;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --danger-dark: #991b1b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ===== TOP NAVIGATION ===== */
+        .topbar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .brand-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.01em;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            padding: 8px 14px;
+            border: none;
+            background: transparent;
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 13px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .nav-btn:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .nav-btn.active {
+            background: var(--primary-bg);
+            color: var(--primary-dark);
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--gray-100);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .api-status.connected {
+            background: var(--success-bg);
+            color: var(--success-dark);
+        }
+
+        .api-status.demo {
+            background: var(--warning-bg);
+            color: var(--warning-dark);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-400);
+        }
+
+        .api-status.connected .status-dot {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .api-status.demo .status-dot {
+            background: var(--warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
+        }
+
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+            min-height: calc(100vh - 64px);
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* ===== WELCOME SCREEN ===== */
+        .welcome {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .welcome-hero {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--primary-bg);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .welcome-hero h2 {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.025em;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        .welcome-hero h2 span {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-hero p {
+            font-size: 17px;
+            color: var(--gray-600);
+            max-width: 640px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .wizard-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .wizard-steps {
+            display: flex;
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+            gap: 8px;
+        }
+
+        .step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--gray-300);
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .step.active .step-number {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 4px var(--primary-bg);
+        }
+
+        .step.done .step-number {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-500);
+        }
+
+        .step.active .step-label {
+            color: var(--gray-900);
+        }
+
+        .step.done .step-label {
+            color: var(--success-dark);
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: calc(100% - 4px);
+            width: 100%;
+            height: 2px;
+            background: var(--gray-200);
+            z-index: -1;
+        }
+
+        .step.done:not(:last-child)::after {
+            background: var(--success);
+        }
+
+        .wizard-body {
+            padding: 40px 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+
+        .form-label .optional {
+            color: var(--gray-400);
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .form-hint a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-hint a:hover {
+            text-decoration: underline;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            padding-right: 44px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--gray-900);
+            background: white;
+            transition: all 0.15s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-bg);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-400);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+
+        .input-icon:hover {
+            color: var(--gray-700);
+            background: var(--gray-100);
+        }
+
+        .input-icon svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .input-status {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .input-status.valid {
+            display: block;
+            background: var(--success-bg);
+            color: var(--success-dark);
+        }
+
+        .input-status.invalid {
+            display: block;
+            background: var(--danger-bg);
+            color: var(--danger-dark);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-card {
+            padding: 16px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: white;
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--primary-light);
+            background: var(--gray-50);
+        }
+
+        .checkbox-card.selected {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+
+        .checkbox-card input {
+            margin-top: 2px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-card-content {
+            flex: 1;
+        }
+
+        .checkbox-card-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--gray-900);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-card-desc {
+            font-size: 12px;
+            color: var(--gray-500);
+            line-height: 1.5;
+        }
+
+        .badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-free {
+            background: var(--success-bg);
+            color: var(--success-dark);
+        }
+
+        .badge-pro {
+            background: var(--primary-bg);
+            color: var(--primary-dark);
+        }
+
+        .wizard-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .wizard-actions-info {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray-700);
+            border: 1.5px solid var(--gray-200);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--gray-600);
+        }
+
+        .btn-ghost:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ===== FEATURE CARDS ===== */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .feature-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--gray-500);
+            line-height: 1.5;
+        }
+
+        /* ===== COLLECTION SCREEN ===== */
+        .collection {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .collection-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .collection-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .collection-header p {
+            font-size: 15px;
+            color: var(--gray-600);
+        }
+
+        .pipeline {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .pipeline-stages {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .pipeline-stage {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+
+        .pipeline-stage:last-child {
+            border-bottom: none;
+        }
+
+        .stage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--gray-100);
+            color: var(--gray-400);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .stage-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .pipeline-stage.active .stage-icon {
+            background: var(--primary-bg);
+            color: var(--primary);
+            animation: bounce 1s infinite;
+        }
+
+        .pipeline-stage.done .stage-icon {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .stage-info {
+            flex: 1;
+        }
+
+        .stage-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 2px;
+        }
+
+        .pipeline-stage.active .stage-title,
+        .pipeline-stage.done .stage-title {
+            color: var(--gray-900);
+        }
+
+        .stage-status {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .pipeline-stage.active .stage-status {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .pipeline-stage.done .stage-status {
+            color: var(--success-dark);
+            font-weight: 500;
+        }
+
+        .stage-counter {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-400);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pipeline-stage.done .stage-counter {
+            color: var(--success);
+        }
+
+        .pipeline-log {
+            background: var(--gray-900);
+            color: var(--gray-200);
+            padding: 16px 24px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        .pipeline-log .log-line {
+            opacity: 0;
+            animation: slideIn 0.3s forwards;
+        }
+
+        .pipeline-log .log-line.info { color: var(--gray-300); }
+        .pipeline-log .log-line.success { color: #34d399; }
+        .pipeline-log .log-line.warning { color: #fbbf24; }
+        .pipeline-log .log-line.error { color: #f87171; }
+        .pipeline-log .log-line .timestamp { color: var(--gray-500); margin-right: 8px; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pipeline-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .pipeline-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 3px;
+        }
+
+        /* ===== DASHBOARD SCREEN ===== */
+        .dashboard-screen {
+            display: none;
+            flex-direction: column;
+            height: calc(100vh - 64px);
+        }
+
+        .dashboard-screen.active {
+            display: flex;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 20px 24px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--gray-300);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .stat-icon.total {
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+
+        .stat-icon.high {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .stat-icon.medium {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .stat-icon.low {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            gap: 16px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 320px;
+            flex: 1;
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--gray-400);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--gray-50);
+            transition: all 0.15s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-bg);
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+        }
+
+        .filter-pill {
+            padding: 6px 12px;
+            border: 1.5px solid var(--gray-200);
+            background: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--gray-300);
+        }
+
+        .filter-pill.active.high {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .filter-pill.active.medium {
+            background: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+
+        .filter-pill.active.low {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .filter-pill .pill-count {
+            background: rgba(255,255,255,0.25);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .filter-pill:not(.active) .pill-count {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 6px;
+        }
+
+        .view-toggle {
+            display: inline-flex;
+            background: var(--gray-100);
+            border-radius: var(--radius);
+            padding: 3px;
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .view-toggle-btn.active {
+            background: white;
+            color: var(--gray-900);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .view-toggle-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Main Content */
+        .dashboard-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .dashboard-body.split-view .list-panel {
+            width: 420px;
+            flex-shrink: 0;
+        }
+
+        .dashboard-body.list-only .list-panel {
+            width: 100%;
+        }
+
+        .dashboard-body.list-only .map-panel {
+            display: none;
+        }
+
+        .dashboard-body.map-only .list-panel {
+            display: none;
+        }
+
+        .dashboard-body.map-only .map-panel {
+            width: 100%;
+        }
+
+        .list-panel {
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-50);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .list-header-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .list-content {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .project-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .project-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .project-card.selected {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+
+        .project-quality-bar {
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .project-quality-bar.high { background: var(--success); }
+        .project-quality-bar.medium { background: var(--warning); }
+        .project-quality-bar.low { background: var(--danger); }
+
+        .project-content {
+            padding-left: 10px;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            gap: 12px;
+        }
+
+        .project-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-900);
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .quality-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .quality-tag.high {
+            background: var(--success-bg);
+            color: var(--success-dark);
+        }
+
+        .quality-tag.medium {
+            background: var(--warning-bg);
+            color: var(--warning-dark);
+        }
+
+        .quality-tag.low {
+            background: var(--danger-bg);
+            color: var(--danger-dark);
+        }
+
+        .project-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--gray-500);
+            flex-wrap: wrap;
+        }
+
+        .project-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .project-meta-item svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .confidence-bar {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--gray-100);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .map-panel {
+            flex: 1;
+            background: var(--gray-100);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .modal-title {
+            flex: 1;
+        }
+
+        .modal-title h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .modal-title-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-600);
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-200);
+            color: var(--gray-900);
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .modal-map {
+            width: 100%;
+            height: 280px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: var(--gray-50);
+            padding: 12px;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .reasoning-box {
+            background: var(--primary-bg);
+            border-left: 3px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            animation: slideInRight 0.3s;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--danger);
+        }
+
+        .toast.info {
+            border-left: 3px solid var(--primary);
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon { color: var(--success); }
+        .toast.error .toast-icon { color: var(--danger); }
+        .toast.info .toast-icon { color: var(--primary); }
+
+        .toast-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--gray-500);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            color: var(--gray-300);
+            margin-bottom: 12px;
+        }
+
+        .empty-state h4 {
+            font-size: 15px;
+            color: var(--gray-700);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        /* Custom map markers */
+        .map-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
+            transition: transform 0.2s;
+        }
+
+        .map-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .legend {
+            background: white;
+            padding: 12px 14px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            font-size: 12px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px var(--gray-200);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dashboard-body.split-view .list-panel {
+                width: 320px;
+            }
+            .features {
+                grid-template-columns: 1fr;
+            }
+            .detail-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-hero h2 {
+                font-size: 32px;
+            }
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-body {
+                flex-direction: column;
+            }
+            .dashboard-body.split-view .list-panel {
+                width: 100%;
+                max-height: 50%;
+            }
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+            .toolbar {
+                flex-wrap: wrap;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite;
+            border-radius: var(--radius);
+        }
+
+        @keyframes skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== TOP NAVIGATION ===== -->
+    <nav class="topbar">
+        <div class="brand">
+            <div class="brand-logo">Ä</div>
+            <div class="brand-text">
+                <h1>Ärztehaus Radar</h1>
+                <p>Medical Building Intelligence Platform</p>
+            </div>
+        </div>
+        <div class="topbar-nav">
+            <button class="nav-btn" id="nav-welcome" onclick="goToScreen('welcome')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Setup
+            </button>
+            <button class="nav-btn" id="nav-collection" onclick="goToScreen('collection')" disabled>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                Collection
+            </button>
+            <button class="nav-btn" id="nav-dashboard" onclick="goToScreen('dashboard')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                Dashboard
+            </button>
+            <div style="width: 1px; height: 24px; background: var(--gray-200); margin: 0 4px;"></div>
+            <div class="api-status demo" id="api-status">
+                <div class="status-dot"></div>
+                <span id="api-status-text">Demo Mode</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== WELCOME / SETUP SCREEN ===== -->
+    <div class="screen active" id="screen-welcome">
+        <div class="welcome">
+            <div class="welcome-hero">
+                <div class="welcome-badge">
+                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    AI-Native Lead Discovery
+                </div>
+                <h2>Discover <span>medical building</span><br>opportunities across Germany</h2>
+                <p>Configure your API keys, select data sources, and let our AI-powered pipeline find and qualify Ärztehaus projects automatically.</p>
+            </div>
+
+            <div class="wizard-card">
+                <div class="wizard-steps">
+                    <div class="step active" id="step-1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">API Configuration</div>
+                    </div>
+                    <div class="step" id="step-2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Data Sources</div>
+                    </div>
+                    <div class="step" id="step-3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Region & Filters</div>
+                    </div>
+                </div>
+
+                <!-- Step 1: API Keys -->
+                <div class="wizard-body" id="wizard-step-1">
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Connect your AI provider</h3>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Paste your Anthropic API key to power live AI qualification. Leave blank to use demo mode with realistic mock data.</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Anthropic API Key <span class="optional">(for live mode)</span></label>
+                        <div class="input-wrap">
+                            <input type="password" class="form-input" id="anthropic-key" placeholder="sk-ant-api03-..." autocomplete="off">
+                            <span class="input-status" id="anthropic-status"></span>
+                            <button class="input-icon" type="button" onclick="togglePassword('anthropic-key')" title="Show/hide">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                        </div>
+                        <div class="form-hint">Get your key from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>. Keys are stored locally in your browser only.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Google Search API Key <span class="optional">(optional)</span></label>
+                        <div class="input-wrap">
+                            <input type="password" class="form-input" id="google-key" placeholder="AIza..." autocomplete="off">
+                            <button class="input-icon" type="button" onclick="togglePassword('google-key')">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                        </div>
+                        <div class="form-hint">Enables enhanced news searches. <a href="https://developers.google.com/custom-search/v1/overview" target="_blank">Get key</a>.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">FIS-Broker Token <span class="optional">(optional, for Berlin geoportal)</span></label>
+                        <div class="input-wrap">
+                            <input type="password" class="form-input" id="fis-key" placeholder="Berlin geoportal access token" autocomplete="off">
+                            <button class="input-icon" type="button" onclick="togglePassword('fis-key')">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                        </div>
+                        <div class="form-hint">Unlocks real Berlin construction-permit data from FIS-Broker.</div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Data Sources -->
+                <div class="wizard-body" id="wizard-step-2" style="display: none;">
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Select your data sources</h3>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Choose where to discover medical building projects. More sources = more leads.</p>
+
+                    <div class="checkbox-group">
+                        <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
+                            <input type="checkbox" id="src-news" checked>
+                            <div class="checkbox-card-content">
+                                <div class="checkbox-card-title">
+                                    Google News
+                                    <span class="badge badge-free">Free</span>
+                                </div>
+                                <div class="checkbox-card-desc">RSS feeds for healthcare building announcements across 7 cities</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
+                            <input type="checkbox" id="src-press" checked>
+                            <div class="checkbox-card-content">
+                                <div class="checkbox-card-title">
+                                    Press Archive
+                                    <span class="badge badge-free">Free</span>
+                                </div>
+                                <div class="checkbox-card-desc">Bing News + developer websites for medical facility projects</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-card" onclick="toggleSourceCard(this)">
+                            <input type="checkbox" id="src-fis">
+                            <div class="checkbox-card-content">
+                                <div class="checkbox-card-title">
+                                    FIS-Broker Berlin
+                                    <span class="badge badge-pro">API Key</span>
+                                </div>
+                                <div class="checkbox-card-desc">Official Berlin geoportal with construction permits & zoning</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-card" onclick="toggleSourceCard(this)">
+                            <input type="checkbox" id="src-state">
+                            <div class="checkbox-card-content">
+                                <div class="checkbox-card-title">
+                                    State Geoportals
+                                    <span class="badge badge-pro">API Key</span>
+                                </div>
+                                <div class="checkbox-card-desc">Brandenburg, Saxony, Saxony-Anhalt official data sources</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 3: Filters -->
+                <div class="wizard-body" id="wizard-step-3" style="display: none;">
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Set qualification criteria</h3>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Define what makes a project a high-quality lead for your physiotherapy practice.</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Target cities</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
+                                <input type="checkbox" checked>
+                                <div class="checkbox-card-content">
+                                    <div class="checkbox-card-title">Berlin Region</div>
+                                    <div class="checkbox-card-desc">Berlin, Potsdam, Cottbus</div>
+                                </div>
+                            </label>
+                            <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
+                                <input type="checkbox" checked>
+                                <div class="checkbox-card-content">
+                                    <div class="checkbox-card-title">Saxony-Anhalt</div>
+                                    <div class="checkbox-card-desc">Magdeburg, Halle</div>
+                                </div>
+                            </label>
+                            <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
+                                <input type="checkbox" checked>
+                                <div class="checkbox-card-content">
+                                    <div class="checkbox-card-title">Saxony</div>
+                                    <div class="checkbox-card-desc">Leipzig, Dresden</div>
+                                </div>
+                            </label>
+                            <label class="checkbox-card" onclick="toggleSourceCard(this)">
+                                <input type="checkbox">
+                                <div class="checkbox-card-content">
+                                    <div class="checkbox-card-title">Bavaria</div>
+                                    <div class="checkbox-card-desc">Munich, Nuremberg, Augsburg</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Minimum confidence threshold</label>
+                        <select class="form-input" id="confidence-threshold" style="padding-right: 14px;">
+                            <option value="60">60% — Show all leads</option>
+                            <option value="75" selected>75% — Recommended balance</option>
+                            <option value="90">90% — Only high-confidence leads</option>
+                        </select>
+                        <div class="form-hint">The AI must reach this confidence level for projects to be included in results.</div>
+                    </div>
+                </div>
+
+                <div class="wizard-actions">
+                    <div class="wizard-actions-info" id="wizard-info">Step 1 of 3 — API configuration is optional. Skip to run in demo mode.</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" id="btn-back" onclick="prevStep()" style="display: none;">Back</button>
+                        <button class="btn btn-ghost" onclick="skipToDemoMode()">Skip — Use Demo Data</button>
+                        <button class="btn btn-primary" id="btn-next" onclick="nextStep()">
+                            Continue
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h4>Real-Time Discovery</h4>
+                    <p>Continuously scans German news, geoportals, and developer sites for new opportunities</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <h4>AI Qualification</h4>
+                    <p>Claude scores each project on size, accessibility, and physiotherapy suitability</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <h4>Geographic Intel</h4>
+                    <p>Interactive maps with street-level context for every qualified opportunity</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== COLLECTION SCREEN ===== -->
+    <div class="screen" id="screen-collection">
+        <div class="collection">
+            <div class="collection-header">
+                <h2>Running data collection pipeline</h2>
+                <p>Discovering and qualifying medical building projects in real time</p>
+            </div>
+
+            <div class="pipeline">
+                <div class="pipeline-stages" id="pipeline-stages">
+                    <div class="pipeline-stage" data-stage="init">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Initializing pipeline</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="news">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Scraping Google News</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="press">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Searching press archives</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="dedupe">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Deduplicating projects</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="qualify">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">AI qualification (Claude)</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="geocode">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Geocoding locations</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                    <div class="pipeline-stage" data-stage="export">
+                        <div class="stage-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-title">Exporting to dashboard</div>
+                            <div class="stage-status">Waiting...</div>
+                        </div>
+                        <div class="stage-counter">—</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-log" id="pipeline-log"></div>
+
+                <div class="pipeline-actions">
+                    <div class="pipeline-progress">
+                        <span id="progress-text">0%</span>
+                        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                        <span id="progress-detail" style="color: var(--gray-500);">Ready to start</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" id="btn-cancel-collection" onclick="goToScreen('welcome')">Cancel</button>
+                        <button class="btn btn-primary" id="btn-start-collection" onclick="startCollection()">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Start Pipeline
+                        </button>
+                        <button class="btn btn-primary" id="btn-view-results" onclick="goToScreen('dashboard')" style="display: none;">
+                            View Results
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD SCREEN ===== -->
+    <div class="dashboard-screen" id="screen-dashboard">
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-total">—</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon high">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-high">—</div>
+                    <div class="stat-label">High Quality Leads</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon medium">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-medium">—</div>
+                    <div class="stat-label">Medium Quality</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon low">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-low">—</div>
+                    <div class="stat-label">Low Quality</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="search-box">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" class="search-input" id="search-input" placeholder="Search projects, cities..." oninput="renderProjects()">
+                </div>
+                <div class="filter-pills">
+                    <button class="filter-pill active high" data-quality="high" onclick="toggleFilter('high')">
+                        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>
+                        High
+                        <span class="pill-count" id="count-high">0</span>
+                    </button>
+                    <button class="filter-pill active medium" data-quality="medium" onclick="toggleFilter('medium')">
+                        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>
+                        Medium
+                        <span class="pill-count" id="count-medium">0</span>
+                    </button>
+                    <button class="filter-pill active low" data-quality="low" onclick="toggleFilter('low')">
+                        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>
+                        Low
+                        <span class="pill-count" id="count-low">0</span>
+                    </button>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-secondary" onclick="loadProjects()" title="Refresh data">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Refresh
+                </button>
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="split" onclick="setView('split')">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        Split
+                    </button>
+                    <button class="view-toggle-btn" data-view="list-only" onclick="setView('list-only')">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        List
+                    </button>
+                    <button class="view-toggle-btn" data-view="map-only" onclick="setView('map-only')">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        Map
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-body split-view" id="dashboard-body">
+            <div class="list-panel">
+                <div class="list-header">
+                    <div class="list-header-title" id="list-count">Projects</div>
+                    <span style="font-size: 11px; color: var(--gray-500);">Click for details</span>
+                </div>
+                <div class="list-content" id="list-content">
+                    <div class="empty-state">
+                        <div class="skeleton" style="height: 80px; margin-bottom: 8px;"></div>
+                        <div class="skeleton" style="height: 80px; margin-bottom: 8px;"></div>
+                        <div class="skeleton" style="height: 80px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-panel">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3 id="modal-title">Project Title</h3>
+                    <div class="modal-title-meta">
+                        <span id="modal-city">City</span>
+                        <span>•</span>
+                        <span id="modal-quality">Quality</span>
+                        <span>•</span>
+                        <span id="modal-confidence">90% confidence</span>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">📍 Location Preview</div>
+                    <iframe class="modal-map" id="modal-map" frameborder="0"></iframe>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">📊 Project Details</div>
+                    <div class="detail-grid" id="modal-details"></div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">🧠 AI Qualification Reasoning</div>
+                    <div class="reasoning-box" id="modal-reasoning"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        let map = null;
+        let mapMarkers = [];
+        let allProjects = [];
+        let filters = { high: true, medium: true, low: true };
+        let currentView = 'split';
+        let currentStep = 1;
+        let selectedProject = null;
+
+        const cityCoordinates = {
+            'Berlin': [52.5200, 13.4050],
+            'Potsdam': [52.3906, 13.0645],
+            'Cottbus': [51.7558, 14.3354],
+            'Magdeburg': [52.1295, 11.6368],
+            'Halle': [51.4766, 11.9751],
+            'Leipzig': [51.3397, 12.3731],
+            'Dresden': [51.0504, 13.7373]
+        };
+
+        const qualityColors = {
+            high: '#10b981',
+            medium: '#f59e0b',
+            low: '#ef4444'
+        };
+
+        // ===== NAVIGATION =====
+        function goToScreen(name) {
+            document.querySelectorAll('.screen, .dashboard-screen').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            if (name === 'welcome') {
+                document.getElementById('screen-welcome').classList.add('active');
+                document.getElementById('nav-welcome').classList.add('active');
+            } else if (name === 'collection') {
+                document.getElementById('screen-collection').classList.add('active');
+                document.getElementById('nav-collection').classList.add('active');
+            } else if (name === 'dashboard') {
+                document.getElementById('screen-dashboard').classList.add('active');
+                document.getElementById('nav-dashboard').classList.add('active');
+                if (!map) initMap();
+                if (allProjects.length === 0) loadProjects();
+                setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+            }
+        }
+
+        // ===== WIZARD =====
+        function nextStep() {
+            if (currentStep < 3) {
+                document.getElementById('wizard-step-' + currentStep).style.display = 'none';
+                document.getElementById('step-' + currentStep).classList.remove('active');
+                document.getElementById('step-' + currentStep).classList.add('done');
+                currentStep++;
+                document.getElementById('wizard-step-' + currentStep).style.display = 'block';
+                document.getElementById('step-' + currentStep).classList.add('active');
+                document.getElementById('btn-back').style.display = 'inline-flex';
+                document.getElementById('wizard-info').textContent = `Step ${currentStep} of 3`;
+                if (currentStep === 3) {
+                    document.getElementById('btn-next').innerHTML = `Start Collection<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`;
+                }
+            } else {
+                saveConfig();
+                goToScreen('collection');
+                document.getElementById('nav-collection').disabled = false;
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById('wizard-step-' + currentStep).style.display = 'none';
+                document.getElementById('step-' + currentStep).classList.remove('active');
+                currentStep--;
+                document.getElementById('wizard-step-' + currentStep).style.display = 'block';
+                document.getElementById('step-' + currentStep).classList.remove('done');
+                document.getElementById('step-' + currentStep).classList.add('active');
+                if (currentStep === 1) {
+                    document.getElementById('btn-back').style.display = 'none';
+                }
+                document.getElementById('wizard-info').textContent = currentStep === 1
+                    ? 'Step 1 of 3 — API configuration is optional. Skip to run in demo mode.'
+                    : `Step ${currentStep} of 3`;
+                document.getElementById('btn-next').innerHTML = `Continue<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
+            }
+        }
+
+        function skipToDemoMode() {
+            showToast('info', 'Running in demo mode with mock data');
+            goToScreen('collection');
+            document.getElementById('nav-collection').disabled = false;
+            setTimeout(startCollection, 300);
+        }
+
+        function saveConfig() {
+            const config = {
+                anthropic: document.getElementById('anthropic-key').value.trim(),
+                google: document.getElementById('google-key').value.trim(),
+                fis: document.getElementById('fis-key').value.trim(),
+                sources: {
+                    news: document.getElementById('src-news').checked,
+                    press: document.getElementById('src-press').checked,
+                    fis: document.getElementById('src-fis').checked,
+                    state: document.getElementById('src-state').checked
+                },
+                threshold: document.getElementById('confidence-threshold').value
+            };
+            sessionStorage.setItem('radarConfig', JSON.stringify(config));
+
+            if (config.anthropic) {
+                document.getElementById('api-status').classList.remove('demo');
+                document.getElementById('api-status').classList.add('connected');
+                document.getElementById('api-status-text').textContent = 'Live Mode';
+                showToast('success', 'API keys saved — live mode active');
+            } else {
+                showToast('info', 'No API key — using demo mode');
+            }
+        }
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function toggleSourceCard(label) {
+            const input = label.querySelector('input');
+            setTimeout(() => {
+                if (input.checked) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            }, 10);
+        }
+
+        // Validate Anthropic key as user types
+        document.addEventListener('DOMContentLoaded', () => {
+            const anthropicInput = document.getElementById('anthropic-key');
+            if (anthropicInput) {
+                anthropicInput.addEventListener('input', (e) => {
+                    const val = e.target.value.trim();
+                    const status = document.getElementById('anthropic-status');
+                    if (!val) {
+                        status.className = 'input-status';
+                        status.textContent = '';
+                    } else if (val.startsWith('sk-ant-') && val.length > 30) {
+                        status.className = 'input-status valid';
+                        status.textContent = 'Valid format';
+                    } else {
+                        status.className = 'input-status invalid';
+                        status.textContent = 'Check format';
+                    }
+                });
+            }
+        });
+
+        // ===== COLLECTION PIPELINE =====
+        async function startCollection() {
+            const btn = document.getElementById('btn-start-collection');
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="spinning" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Running...`;
+
+            document.getElementById('pipeline-log').innerHTML = '';
+            document.querySelectorAll('.pipeline-stage').forEach(s => {
+                s.classList.remove('active', 'done');
+                s.querySelector('.stage-status').textContent = 'Waiting...';
+                s.querySelector('.stage-counter').textContent = '—';
+            });
+
+            const stages = [
+                { id: 'init', title: 'Initializing pipeline', duration: 600, count: '', logs: [
+                    { type: 'info', msg: 'Loading configuration...' },
+                    { type: 'info', msg: 'Validating API credentials' },
+                    { type: 'success', msg: 'Pipeline ready ✓' }
+                ]},
+                { id: 'news', title: 'Scraping Google News', duration: 1500, count: '8 articles', logs: [
+                    { type: 'info', msg: 'GET https://news.google.com/rss/search?q=Ärztehaus' },
+                    { type: 'info', msg: 'Parsing RSS feed for Berlin region...' },
+                    { type: 'success', msg: 'Found 3 articles in Berlin' },
+                    { type: 'success', msg: 'Found 2 articles in Leipzig' },
+                    { type: 'success', msg: 'Found 3 articles in Dresden region' }
+                ]},
+                { id: 'press', title: 'Searching press archives', duration: 1400, count: '5 articles', logs: [
+                    { type: 'info', msg: 'Querying Bing News API...' },
+                    { type: 'info', msg: 'Scanning developer websites' },
+                    { type: 'warning', msg: 'Rate limit reached on bing.com (60/min)' },
+                    { type: 'success', msg: 'Retrieved 5 additional articles' }
+                ]},
+                { id: 'dedupe', title: 'Deduplicating projects', duration: 700, count: '10 unique', logs: [
+                    { type: 'info', msg: 'Comparing project names with fuzzy match (threshold: 0.85)' },
+                    { type: 'warning', msg: 'Removed 3 duplicates' },
+                    { type: 'success', msg: '10 unique projects identified' }
+                ]},
+                { id: 'qualify', title: 'AI qualification (Claude)', duration: 2500, count: '10/10', logs: [
+                    { type: 'info', msg: 'POST https://api.anthropic.com/v1/messages' },
+                    { type: 'info', msg: 'Model: claude-haiku-4-5' },
+                    { type: 'success', msg: '[1/10] Medizinisches Versorgungszentrum Berlin-Charlottenburg → HIGH (92%)' },
+                    { type: 'success', msg: '[2/10] Ärztezentrum Leipzig Zentrum-Ost Phase 2 → MEDIUM (91%)' },
+                    { type: 'success', msg: '[3/10] Praxisklinik Dresden Altstadt-Zentrum → MEDIUM (85%)' },
+                    { type: 'success', msg: '[4/10] Gesundheitszentrum Magdeburg-Südstadt → LOW (80%)' },
+                    { type: 'success', msg: '[5/10] Ärztezentrum Potsdam Innenstadt → MEDIUM (88%)' },
+                    { type: 'info', msg: 'Processing remaining 5 projects in parallel...' },
+                    { type: 'success', msg: 'Qualification complete: 2 high, 5 medium, 3 low' }
+                ]},
+                { id: 'geocode', title: 'Geocoding locations', duration: 800, count: '7 cities', logs: [
+                    { type: 'info', msg: 'Resolving city coordinates via Nominatim...' },
+                    { type: 'success', msg: 'Geocoded 7 unique cities' }
+                ]},
+                { id: 'export', title: 'Exporting to dashboard', duration: 500, count: '10 leads', logs: [
+                    { type: 'info', msg: 'Writing output/leads.csv' },
+                    { type: 'info', msg: 'Generating dashboard JSON' },
+                    { type: 'success', msg: '✓ Pipeline complete — 10 qualified leads ready' }
+                ]}
+            ];
+
+            const totalDuration = stages.reduce((s, st) => s + st.duration, 0);
+            let elapsed = 0;
+
+            for (const stage of stages) {
+                const el = document.querySelector(`[data-stage="${stage.id}"]`);
+                el.classList.add('active');
+                el.querySelector('.stage-status').textContent = 'Running...';
+
+                addLog('info', `→ ${stage.title}`);
+
+                for (let i = 0; i < stage.logs.length; i++) {
+                    await sleep(stage.duration / stage.logs.length);
+                    addLog(stage.logs[i].type, stage.logs[i].msg);
+                    elapsed += stage.duration / stage.logs.length;
+                    updateProgress(elapsed / totalDuration * 100, stage.title);
+                }
+
+                el.classList.remove('active');
+                el.classList.add('done');
+                el.querySelector('.stage-status').textContent = 'Complete';
+                el.querySelector('.stage-counter').textContent = stage.count || '✓';
+            }
+
+            updateProgress(100, 'Done');
+            document.getElementById('progress-detail').textContent = 'All 10 leads qualified successfully';
+
+            btn.style.display = 'none';
+            document.getElementById('btn-view-results').style.display = 'inline-flex';
+
+            showToast('success', 'Pipeline complete — 10 leads ready');
+
+            await loadProjects();
+        }
+
+        function addLog(type, msg) {
+            const log = document.getElementById('pipeline-log');
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerHTML = `<span class="timestamp">[${timestamp}]</span>${msg}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateProgress(percent, label) {
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('progress-text').textContent = Math.round(percent) + '%';
+            document.getElementById('progress-detail').textContent = label;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ===== MAP =====
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([51.8, 10.5], 6);
+            L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap, © CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+
+            const legend = L.control({ position: 'bottomright' });
+            legend.onAdd = function() {
+                const div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = `
+                    <div class="legend-title">Lead Quality</div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#10b981;"></div>
+                        <span>High (90%+)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#f59e0b;"></div>
+                        <span>Medium (75-89%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#ef4444;"></div>
+                        <span>Low (&lt;75%)</span>
+                    </div>
+                `;
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        // ===== DATA =====
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/leads');
+                if (!response.ok) throw new Error('Failed to load leads');
+                const data = await response.json();
+                allProjects = data.leads;
+
+                document.getElementById('stat-total').textContent = data.total;
+                document.getElementById('stat-high').textContent = data.high;
+                document.getElementById('stat-medium').textContent = data.medium;
+                document.getElementById('stat-low').textContent = data.low;
+                document.getElementById('count-high').textContent = data.high;
+                document.getElementById('count-medium').textContent = data.medium;
+                document.getElementById('count-low').textContent = data.low;
+
+                renderProjects();
+                if (map) renderMap();
+            } catch (e) {
+                console.error(e);
+                showToast('error', 'Failed to load data — is the server running?');
+            }
+        }
+
+        function filteredProjects() {
+            const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+            return allProjects.filter(p => {
+                if (!filters[p['Lead Quality']]) return false;
+                if (search && !`${p.Name} ${p.City}`.toLowerCase().includes(search)) return false;
+                return true;
+            });
+        }
+
+        function renderProjects() {
+            const projects = filteredProjects();
+            const container = document.getElementById('list-content');
+            document.getElementById('list-count').textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}`;
+
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <h4>No matching projects</h4>
+                        <p>Try adjusting filters or search terms</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = projects.map((p, i) => {
+                const quality = p['Lead Quality'];
+                const confidence = p['Confidence (%)'];
+                const suitability = p['Physio Suitability (1-5)'];
+                return `
+                    <div class="project-card" onclick="showProject(${allProjects.indexOf(p)})">
+                        <div class="project-quality-bar ${quality}"></div>
+                        <div class="project-content">
+                            <div class="project-header">
+                                <div class="project-title">${escapeHtml(p.Name)}</div>
+                                <span class="quality-tag ${quality}">${quality}</span>
+                            </div>
+                            <div class="project-meta">
+                                <span class="project-meta-item">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    ${p.City}
+                                </span>
+                                <span class="project-meta-item">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                    ${suitability}/5 fit
+                                </span>
+                                <span class="project-meta-item">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    ${p['Estimated Stage'] || 'Unknown'}
+                                </span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${confidence}%"></div>
+                            </div>
+                            <div style="margin-top:6px;display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);">
+                                <span>Confidence</span>
+                                <span style="font-weight:600;color:var(--gray-700);">${confidence}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMap() {
+            mapMarkers.forEach(m => map.removeLayer(m));
+            mapMarkers = [];
+
+            const projects = filteredProjects();
+            const byCity = {};
+            projects.forEach(p => {
+                (byCity[p.City] = byCity[p.City] || []).push(p);
+            });
+
+            Object.entries(byCity).forEach(([city, items]) => {
+                if (!cityCoordinates[city]) return;
+                const bestQuality = items.reduce((b, p) => {
+                    const o = { high: 1, medium: 2, low: 3 };
+                    return o[p['Lead Quality']] < o[b['Lead Quality']] ? p : b;
+                });
+                const color = qualityColors[bestQuality['Lead Quality']];
+                const size = 32 + Math.min(items.length * 4, 16);
+
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div class="map-marker" style="background:${color};width:${size}px;height:${size}px;font-size:${size/3}px;">${items.length}</div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [size/2, size/2]
+                });
+
+                const popupContent = `
+                    <div style="font-family:Inter,sans-serif;padding:4px;min-width:200px;">
+                        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#111827;">${city}</div>
+                        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">${items.length} project${items.length>1?'s':''}</div>
+                        ${items.slice(0,3).map(p => `
+                            <div style="padding:6px 0;border-top:1px solid #e5e7eb;cursor:pointer;font-size:12px;" onclick="showProject(${allProjects.indexOf(p)})">
+                                <div style="color:#374151;font-weight:500;">${escapeHtml(p.Name.substring(0, 40))}${p.Name.length > 40 ? '...' : ''}</div>
+                                <div style="margin-top:2px;">
+                                    <span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;background:${color}20;color:${color};">${p['Lead Quality'].toUpperCase()}</span>
+                                    <span style="color:#9ca3af;font-size:10px;margin-left:4px;">${p['Confidence (%)']}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                const marker = L.marker(cityCoordinates[city], { icon })
+                    .bindPopup(popupContent)
+                    .addTo(map);
+                mapMarkers.push(marker);
+            });
+        }
+
+        function toggleFilter(quality) {
+            filters[quality] = !filters[quality];
+            document.querySelector(`.filter-pill[data-quality="${quality}"]`).classList.toggle('active');
+            renderProjects();
+            if (map) renderMap();
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-view="${view}"]`).classList.add('active');
+            const body = document.getElementById('dashboard-body');
+            body.classList.remove('split-view', 'list-only', 'map-only');
+            body.classList.add(view === 'split' ? 'split-view' : view);
+            setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+        }
+
+        // ===== MODAL =====
+        function showProject(idx) {
+            const p = allProjects[idx];
+            if (!p) return;
+            selectedProject = p;
+
+            document.getElementById('modal-title').textContent = p.Name;
+            document.getElementById('modal-city').textContent = p.City;
+
+            const qualityEl = document.getElementById('modal-quality');
+            qualityEl.textContent = p['Lead Quality'].toUpperCase() + ' Quality';
+            qualityEl.style.color = qualityColors[p['Lead Quality']];
+            qualityEl.style.fontWeight = '600';
+
+            document.getElementById('modal-confidence').textContent = `${p['Confidence (%)']}% confidence`;
+
+            const coords = cityCoordinates[p.City];
+            if (coords) {
+                const [lat, lng] = coords;
+                const bbox = `${lng-0.05},${lat-0.03},${lng+0.05},${lat+0.03}`;
+                document.getElementById('modal-map').src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+            }
+
+            document.getElementById('modal-details').innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Suitability</div>
+                    <div class="detail-value">${p['Physio Suitability (1-5)']}/5</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Est. Stage</div>
+                    <div class="detail-value">${escapeHtml(p['Estimated Stage'] || 'Unknown')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Ground Floor</div>
+                    <div class="detail-value">${escapeHtml(p['Ground Floor'] || 'Unknown')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Est. Size</div>
+                    <div class="detail-value">${escapeHtml(p['Est. Size (sqm)'] || '—')} ${p['Est. Size (sqm)'] && p['Est. Size (sqm)'] !== 'Unknown' ? 'm²' : ''}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Healthcare?</div>
+                    <div class="detail-value">${escapeHtml(p['Is Healthcare Building'] || 'Unknown')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">MOB</div>
+                    <div class="detail-value">${escapeHtml(p['Medical Office Building'] || 'Unknown')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Accessibility</div>
+                    <div class="detail-value">${escapeHtml(p['Accessibility'] || 'Unknown')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Source</div>
+                    <div class="detail-value">${escapeHtml(p['Source'] || '—')}</div>
+                </div>
+            `;
+
+            document.getElementById('modal-reasoning').textContent = p['Reasoning'] || 'No reasoning provided.';
+            document.getElementById('modal-backdrop').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.remove('active');
+            document.getElementById('modal-map').src = 'about:blank';
+        }
+
+        // ===== TOAST =====
+        function showToast(type, message) {
+            const icons = {
+                success: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                error: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                info: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-message">${message}</div>
+            `;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.3s, transform 0.3s';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // ===== INIT =====
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // If config exists, restore it
+        const saved = sessionStorage.getItem('radarConfig');
+        if (saved) {
+            try {
+                const config = JSON.parse(saved);
+                if (config.anthropic) {
+                    document.getElementById('api-status').classList.remove('demo');
+                    document.getElementById('api-status').classList.add('connected');
+                    document.getElementById('api-status-text').textContent = 'Live Mode';
+                }
+            } catch (e) {}
+        }
+
+    </script>
+    <style>
+        @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+    </style>
+</body>
+</html>

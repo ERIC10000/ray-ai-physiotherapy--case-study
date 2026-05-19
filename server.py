@@ -27,13 +27,23 @@ def load_csv_data(csv_file="output/leads.csv"):
 
 @app.route('/')
 def dashboard():
-    """Serve the enhanced dashboard (default view with map + list views)."""
+    """Serve the professional dashboard with setup wizard + data collection + results."""
+    return send_file('output/dashboard-pro.html')
+
+@app.route('/classic')
+def dashboard_classic():
+    """Serve the previous enhanced dashboard (map + list views)."""
     return send_file('output/dashboard-enhanced.html')
 
 @app.route('/list')
 def dashboard_list():
-    """Serve the list dashboard."""
+    """Serve the list-only dashboard."""
     return send_file('output/dashboard-live.html')
+
+@app.route('/map')
+def dashboard_map():
+    """Serve the map-only dashboard."""
+    return send_file('output/dashboard-map.html')
 
 @app.route('/api/leads')
 def get_leads():
