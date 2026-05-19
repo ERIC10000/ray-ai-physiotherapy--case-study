@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Ärztezentrum Leipzig Zentrum-Ost Phase 2",
+    "city": "Leipzig",
+    "source": "Developer Press",
+    "description": "Neubau eines modernen Ärztezentrums mit ca. 380 qm Erdgeschoss-Fläche, 14 Arztpraxen verschiedener Fachrichtungen, rollstuhlgerecht, 30 Parkplätze, geplante Fertigstellung Q4 2024. In der Genehmigungsphase.",
+    "url": "https://www.beispiel.de/projekte/leipzig-zentrum-ost"
+  },
+  {
+    "name": "Medizinisches Versorgungszentrum Berlin-Charlottenburg",
+    "city": "Berlin",
+    "source": "Google News",
+    "description": "Planungen für neues Ärztezentrum in Charlottenburg, Bodenfläche ca. 420 qm auf Erdgeschoss, 16 Facharztpraxen, öffentliche Verkehrsanbindung direkt vor Ort, Baustart geplant Q1 2025. Baugenehmigung erteilt.",
+    "url": "https://www.berlin.de/ba-charlottenburg-wilmersdorf/news/2024"
+  },
+  {
+    "name": "Praxisklinik Dresden Altstadt-Zentrum",
+    "city": "Dresden",
+    "source": "Bing News",
+    "description": "Konzeptstudie und Machbarkeitsstudie für integrierte Praxisklinik Dresden Altstadt. Erdgeschoss ca. 350-450 qm, zentrale Lage mit hoher Fußgängerfrequenz, noch in früher Planungsphase (Konzept).",
+    "url": "https://www.dresden.de/projekte/altstadt"
+  },
+  {
+    "name": "Gesundheitszentrum Magdeburg-Südstadt",
+    "city": "Magdeburg",
+    "source": "Developer Website",
+    "description": "Neues Gesundheitszentrum Südstadt Magdeburg mit gemischter Nutzung. Medizinische Flächen ca. 280 qm, nicht Erdgeschoss (1. OG), mittlere Verkehrserreichbarkeit, aktuell in Planungsphase.",
+    "url": "https://www.magdeburg.de/bau/gesundheitszentrum"
+  },
+  {
+    "name": "Ärztezentrum Potsdam Innenstadt",
+    "city": "Potsdam",
+    "source": "Google News",
+    "description": "Sanierung und Umwandlung historisches Gebäude zu Ärztezentrum, ca. 300 qm Nutzfläche (gemischt über mehrere Ebenen), Zentrumsrand, rollstuhlgerecht nachgerüstet, in Genehmigungsphase.",
+    "url": "https://www.potsdam.de/bauprojekte"
+  },
+  {
+    "name": "Ambulantes Zentrum Cottbus Zentrum",
+    "city": "Cottbus",
+    "source": "Bing News",
+    "description": "Neubau ambulantes medizinisches Zentrum Cottbus Zentrum, ca. 260 qm Erdgeschoss, hochwertige Lage, 15 Parkplätze, noch in Konzeptphase, Investor sucht Mieter.",
+    "url": "https://www.cottbus.de/projekte"
+  },
+  {
+    "name": "Arztpraxishaus Halle (Saale) Südpark",
+    "city": "Halle",
+    "source": "Developer Press",
+    "description": "Planung neues Arztpraxishaus in Südpark-Gebiet Halle. Erdgeschoss ca. 320 qm, 8-10 Praxen, periphere Lage, öffentliche Verkehrsanbindung gut, Baustart Q2 2025 geplant.",
+    "url": "https://www.halle.de/bauprojekte"
+  },
+  {
+    "name": "Medizinische Versorgung Berlin-Friedrichshain",
+    "city": "Berlin",
+    "source": "Google News",
+    "description": "Neue medizinische Versorgungspraxis in Friedrichshain, ca. 200 qm Fläche (Mischnutzung), in aktiver Konstruktion, Eröffnung geplant Sommer 2024.",
+    "url": "https://www.berlin.de/ba-friedrichshain-kreuzberg"
+  },
+  {
+    "name": "Ärztezentrum Leipzig-Gohlis Neubau",
+    "city": "Leipzig",
+    "source": "Developer Website",
+    "description": "Neubau Ärztehaus Leipzig-Gohlis, ca. 400 qm Erdgeschoss, 12 Facharztpraxen, direkt am Park, hervorragende Zugänglichkeit, aktuell Marketing-Phase, Eröffnung Q1 2025.",
+    "url": "https://www.leipzig.de/bauprojekte"
+  },
+  {
+    "name": "Gesundheitspark Dresden-Neustadt",
+    "city": "Dresden",
+    "source": "Press Release",
+    "description": "Integrierter Gesundheitspark Dresden-Neustadt mit Ärztehaus-Komponente, ca. 500+ qm medizinische Nutzung (mehrere Ebenen), Studentenstadt-Lage, in früher Planungsphase.",
+    "url": "https://www.dresden.de/gesundheitspark"
+  }
+]
