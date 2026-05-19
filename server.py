@@ -27,7 +27,12 @@ def load_csv_data(csv_file="output/leads.csv"):
 
 @app.route('/')
 def dashboard():
-    """Serve the dashboard HTML."""
+    """Serve the map dashboard (default view)."""
+    return send_file('output/dashboard-map.html')
+
+@app.route('/list')
+def dashboard_list():
+    """Serve the list dashboard."""
     return send_file('output/dashboard-live.html')
 
 @app.route('/api/leads')
