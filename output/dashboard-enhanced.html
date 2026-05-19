@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ärztehaus Radar - Unified Dashboard</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 200;
+        }
+
+        .header-left {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 1.3em;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .view-btn:hover {
+            border-color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.hidden {
+            display: none;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.9em;
+        }
+
+        .filter-btn {
+            display: inline-block;
+            padding: 8px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+
+        .filter-btn.active {
+            color: white;
+            border-color: #667eea;
+            background: #667eea;
+        }
+
+        .filter-btn.high {
+            border-color: #10b981;
+        }
+
+        .filter-btn.high.active {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .filter-btn.medium {
+            border-color: #f59e0b;
+        }
+
+        .filter-btn.medium.active {
+            background: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .filter-btn.low {
+            border-color: #ef4444;
+        }
+
+        .filter-btn.low.active {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .projects-list {
+            padding: 0 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .project-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-item:hover {
+            background: #f3f4f6;
+            transform: translateX(3px);
+        }
+
+        .project-item.high {
+            border-left-color: #10b981;
+        }
+
+        .project-item.medium {
+            border-left-color: #f59e0b;
+        }
+
+        .project-item.low {
+            border-left-color: #ef4444;
+        }
+
+        .project-name {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .project-city {
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .project-quality {
+            display: inline-block;
+            font-size: 0.75em;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .quality-high { background: #d1fae5; color: #065f46; }
+        .quality-medium { background: #fef3c7; color: #92400e; }
+        .quality-low { background: #fee2e2; color: #7f1d1d; }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: #e5e7eb;
+        }
+
+        .map-container.full {
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stats {
+            padding: 20px;
+            background: #f3f4f6;
+            border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .stat-label { color: #6b7280; }
+        .stat-value { font-weight: bold; color: #1f2937; }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .legend {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        /* Modal for Street View */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 300;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .street-view-container {
+            width: 100%;
+            height: 400px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .street-view-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .street-view-placeholder {
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .project-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1em;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .reasoning {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #4b5563;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .view-toggle {
+                width: 100%;
+            }
+
+            .view-btn {
+                flex: 1;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 40vh;
+                border-right: none;
+                border-bottom: 3px solid #667eea;
+            }
+
+            .map-container {
+                flex: 1;
+            }
+
+            .project-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with View Toggle -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-title">Ärztehaus Radar</div>
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="switchView('map')">🗺️ Map</button>
+            <button class="view-btn" onclick="switchView('list')">📋 List</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar (shown in both views) -->
+        <div class="sidebar" id="sidebar">
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">Filter by Quality:</label>
+                    <button class="filter-btn high active" onclick="toggleFilter('high')">✓ High</button>
+                    <button class="filter-btn medium active" onclick="toggleFilter('medium')">✓ Medium</button>
+                    <button class="filter-btn low active" onclick="toggleFilter('low')">✓ Low</button>
+                </div>
+                <button style="width: 100%; padding: 8px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="location.reload()">
+                    Refresh Data
+                </button>
+            </div>
+
+            <div id="projects-container" class="projects-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading projects...</p>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total:</span>
+                    <span class="stat-value" id="stat-total">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">High Quality:</span>
+                    <span class="stat-value" id="stat-high">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Medium Quality:</span>
+                    <span class="stat-value" id="stat-medium">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Low Quality:</span>
+                    <span class="stat-value" id="stat-low">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container" id="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Street View Modal -->
+    <div class="modal" id="streetViewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Project Details</h2>
+                <button class="modal-close" onclick="closeStreetView()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="street-view-container" id="streetViewContainer">
+                    <div class="street-view-placeholder">
+                        <p>Loading street view for this location...</p>
+                    </div>
+                </div>
+                <div class="project-details" id="projectDetails"></div>
+                <div class="reasoning" id="projectReasoning"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+    <script>
+        let map;
+        let markers = [];
+        let allProjects = [];
+        let filters = { high: true, medium: true, low: true };
+        let currentView = 'map';
+
+        const cityCoordinates = {
+            'Berlin': [52.5200, 13.4050],
+            'Potsdam': [52.3906, 13.0645],
+            'Cottbus': [51.7558, 14.3354],
+            'Magdeburg': [52.1295, 11.6368],
+            'Halle': [51.4766, 11.9751],
+            'Leipzig': [51.3397, 12.3731],
+            'Dresden': [51.0504, 13.7373]
+        };
+
+        const qualityColors = {
+            'high': '#10b981',
+            'medium': '#f59e0b',
+            'low': '#ef4444'
+        };
+
+        // Switch between views
+        function switchView(view) {
+            currentView = view;
+
+            // Update buttons
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'list') {
+                // List view: full width sidebar
+                document.getElementById('map-container').style.display = 'none';
+                document.getElementById('sidebar').style.width = '100%';
+                document.getElementById('sidebar').style.maxHeight = 'none';
+                document.getElementById('sidebar').style.borderRight = 'none';
+            } else {
+                // Map view: sidebar + map
+                document.getElementById('map-container').style.display = 'flex';
+                document.getElementById('sidebar').style.width = '350px';
+                document.getElementById('sidebar').style.maxHeight = 'none';
+            }
+        }
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([51.8, 10.5], 6);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add legend
+            const legend = L.control({ position: 'bottomright' });
+            legend.onAdd = function() {
+                const div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 10px;">Lead Quality</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>High Quality</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>Medium Quality</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ef4444;"></div>
+                        <span>Low Quality</span>
+                    </div>
+                `;
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        // Load projects
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/leads');
+                if (!response.ok) throw new Error('Failed to load leads');
+
+                const data = await response.json();
+                allProjects = data.leads;
+
+                document.getElementById('stat-total').textContent = data.total;
+                document.getElementById('stat-high').textContent = data.high;
+                document.getElementById('stat-medium').textContent = data.medium;
+                document.getElementById('stat-low').textContent = data.low;
+
+                renderProjects();
+                if (currentView === 'map') renderMap();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('projects-container').innerHTML = `
+                    <div class="error">
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Make sure the server is running: python server.py</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render projects list
+        function renderProjects() {
+            const filtered = allProjects.filter(p => filters[p['Lead Quality']]);
+            let html = '';
+
+            if (filtered.length === 0) {
+                html = '<p style="padding: 20px; color: #6b7280;">No projects match selected filters</p>';
+            } else {
+                html = filtered.map(p => `
+                    <div class="project-item ${p['Lead Quality']}" onclick="showStreetView('${p.Name.replace(/'/g, "\\'")}', '${p.City}')">
+                        <div class="project-name">${p.Name.substring(0, 35)}...</div>
+                        <div class="project-city">${p.City}</div>
+                        <span class="project-quality quality-${p['Lead Quality']}">${p['Lead Quality']}</span>
+                        <span style="font-size: 0.75em; color: #6b7280; margin-left: 5px;">${p['Confidence (%)']}%</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('projects-container').innerHTML = html;
+        }
+
+        // Render map
+        function renderMap() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const projectsByCity = {};
+            allProjects.forEach(p => {
+                if (!projectsByCity[p.City]) {
+                    projectsByCity[p.City] = [];
+                }
+                projectsByCity[p.City].push(p);
+            });
+
+            Object.entries(projectsByCity).forEach(([city, projects]) => {
+                if (!cityCoordinates[city]) return;
+
+                const coords = cityCoordinates[city];
+                const bestQuality = projects.reduce((best, p) => {
+                    const order = { high: 1, medium: 2, low: 3 };
+                    return order[p['Lead Quality']] < order[best['Lead Quality']] ? p : best;
+                });
+
+                const color = qualityColors[bestQuality['Lead Quality']];
+
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `
+                        <div style="
+                            background: ${color};
+                            color: white;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: bold;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                            border: 3px solid white;
+                        ">
+                            ${projects.length}
+                        </div>
+                    `,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+
+                const popupContent = `
+                    <div style="font-weight: bold; margin-bottom: 10px;">${city}</div>
+                    <div style="font-size: 0.9em; margin-bottom: 10px;">
+                        <div>${projects.length} total projects</div>
+                        <div style="color: #10b981;">🟢 ${projects.filter(p => p['Lead Quality'] === 'high').length} High</div>
+                        <div style="color: #f59e0b;">🟡 ${projects.filter(p => p['Lead Quality'] === 'medium').length} Medium</div>
+                        <div style="color: #ef4444;">🔴 ${projects.filter(p => p['Lead Quality'] === 'low').length} Low</div>
+                    </div>
+                    <div style="font-size: 0.85em; color: #6b7280;">Click a project to see street view</div>
+                `;
+
+                const marker = L.marker(coords, { icon })
+                    .bindPopup(popupContent)
+                    .addTo(map);
+
+                markers.push(marker);
+            });
+        }
+
+        // Toggle filter
+        function toggleFilter(quality) {
+            filters[quality] = !filters[quality];
+            document.querySelectorAll(`.filter-btn.${quality}`).forEach(btn => {
+                btn.classList.toggle('active');
+            });
+            renderProjects();
+            if (currentView === 'map') renderMap();
+        }
+
+        // Show street view modal
+        function showStreetView(projectName, city) {
+            const project = allProjects.find(p => p.Name === projectName);
+            if (!project) return;
+
+            document.getElementById('modalTitle').textContent = project.Name;
+
+            // Street view iframe (using OpenStreetMap static image + link to Mapillary)
+            const coords = cityCoordinates[city];
+            if (coords) {
+                const osmLink = `https://www.openstreetmap.org/?mlat=${coords[0]}&mlon=${coords[1]}&zoom=15`;
+                document.getElementById('streetViewContainer').innerHTML = `
+                    <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${coords[1]-0.01},${coords[0]-0.01},${coords[1]+0.01},${coords[0]+0.01}&layer=mapnik&marker=${coords[0]},${coords[1]}"
+                            style="width: 100%; height: 100%; border: none;"></iframe>
+                `;
+            }
+
+            // Project details
+            document.getElementById('projectDetails').innerHTML = `
+                <div class="detail-box">
+                    <div class="detail-label">City</div>
+                    <div class="detail-value">${project.City}</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Confidence</div>
+                    <div class="detail-value">${project['Confidence (%)']}%</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Suitability</div>
+                    <div class="detail-value">${project['Physio Suitability (1-5)']}/5</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Stage</div>
+                    <div class="detail-value">${project['Estimated Stage']}</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Ground Floor</div>
+                    <div class="detail-value">${project['Ground Floor']}</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Size (sqm)</div>
+                    <div class="detail-value">${project['Est. Size (sqm)']}</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Source</div>
+                    <div class="detail-value">${project.Source}</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-label">Lead Quality</div>
+                    <div class="detail-value" style="color: ${qualityColors[project['Lead Quality']]};">${project['Lead Quality'].toUpperCase()}</div>
+                </div>
+            `;
+
+            document.getElementById('projectReasoning').textContent = project.Reasoning;
+
+            document.getElementById('streetViewModal').classList.add('show');
+        }
+
+        // Close modal
+        function closeStreetView() {
+            document.getElementById('streetViewModal').classList.remove('show');
+        }
+
+        // Close on background click
+        document.getElementById('streetViewModal').onclick = function(e) {
+            if (e.target === this) {
+                closeStreetView();
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            loadProjects();
+        });
+    </script>
+</body>
+</html>
