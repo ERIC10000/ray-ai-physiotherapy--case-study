@@ -1334,6 +1334,258 @@
         }
         .chip-source svg { color: var(--gray-500); }
 
+        /* ===== SLIDER ===== */
+        .slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 4px;
+        }
+
+        .range-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary) 0%, var(--primary) 0%, var(--gray-200) 0%, var(--gray-200) 100%);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+            transition: transform 0.15s;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+        }
+
+        .slider-value {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            min-width: 110px;
+            padding: 8px 14px;
+            background: var(--primary-bg);
+            border-radius: 8px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        #target-count-display {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .slider-unit {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.75;
+        }
+
+        .slider-marks {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 0 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--gray-400);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== ESTIMATE PANEL ===== */
+        .estimate-panel {
+            margin-top: 24px;
+            background: linear-gradient(135deg, #fafbff 0%, #f5f7ff 100%);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+        }
+
+        .estimate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--gray-200);
+        }
+
+        .estimate-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .estimate-title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--primary);
+        }
+
+        .estimate-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .estimate-badge .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .estimate-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .estimate-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .estimate-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .estimate-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .estimate-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .estimate-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .estimate-label {
+            font-size: 10.5px;
+            color: var(--gray-500);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .estimate-breakdown {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breakdown-label svg {
+            width: 12px;
+            height: 12px;
+            color: var(--gray-400);
+        }
+
+        .breakdown-value {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .estimate-footnote {
+            font-size: 11px;
+            color: var(--gray-500);
+            margin-top: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            line-height: 1.5;
+        }
+
+        .estimate-footnote svg {
+            width: 12px;
+            height: 12px;
+            color: var(--gray-400);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
         .map-panel {
             flex: 1;
             background: var(--gray-100);
@@ -2209,6 +2461,95 @@
                 height: 10px;
             }
 
+            /* Slider on mobile */
+            .slider-wrap {
+                flex-direction: column-reverse;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .slider-value {
+                justify-content: center;
+                min-width: 0;
+                padding: 10px 14px;
+            }
+
+            #target-count-display {
+                font-size: 20px;
+            }
+
+            .range-slider {
+                height: 8px; /* easier to grab on touch */
+            }
+
+            .range-slider::-webkit-slider-thumb {
+                width: 26px;
+                height: 26px;
+            }
+
+            .range-slider::-moz-range-thumb {
+                width: 26px;
+                height: 26px;
+            }
+
+            /* Estimate panel on mobile */
+            .estimate-panel {
+                padding: 14px;
+                margin-top: 18px;
+            }
+
+            .estimate-header {
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+            }
+
+            .estimate-title {
+                font-size: 11px;
+            }
+
+            .estimate-badge {
+                font-size: 9.5px;
+                padding: 2px 6px;
+            }
+
+            .estimate-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .estimate-item {
+                padding: 10px;
+            }
+
+            .estimate-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .estimate-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .estimate-value {
+                font-size: 15px;
+            }
+
+            .breakdown-row {
+                padding: 7px 12px;
+                font-size: 11.5px;
+            }
+
+            .breakdown-label svg {
+                display: none;
+            }
+
+            .estimate-footnote {
+                font-size: 10.5px;
+                margin-top: 8px;
+            }
+
             /* Modal */
             .modal-backdrop {
                 padding: 0;
@@ -2641,12 +2982,103 @@
 
                     <div class="form-group">
                         <label class="form-label">Minimum confidence threshold</label>
-                        <select class="form-input" id="confidence-threshold" style="padding-right: 14px;">
+                        <select class="form-input" id="confidence-threshold" style="padding-right: 14px;" onchange="updateEstimate()">
                             <option value="60">60% — Show all leads</option>
                             <option value="75" selected>75% — Recommended balance</option>
                             <option value="90">90% — Only high-confidence leads</option>
                         </select>
                         <div class="form-hint">The AI must reach this confidence level for projects to be included in results.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target number of projects to scrape</label>
+                        <div class="slider-wrap">
+                            <input type="range" min="10" max="200" value="50" step="10" id="target-count" class="range-slider" oninput="onSliderChange()">
+                            <div class="slider-value">
+                                <span id="target-count-display">50</span>
+                                <span class="slider-unit">projects</span>
+                            </div>
+                        </div>
+                        <div class="slider-marks">
+                            <span>10</span>
+                            <span>50</span>
+                            <span>100</span>
+                            <span>150</span>
+                            <span>200</span>
+                        </div>
+                        <div class="form-hint">More projects = broader coverage but longer runtime and higher API cost. We'll scale scraping depth accordingly.</div>
+                    </div>
+
+                    <div class="estimate-panel">
+                        <div class="estimate-header">
+                            <div class="estimate-title">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                Estimated run
+                            </div>
+                            <div class="estimate-badge">
+                                <span class="live-dot"></span>
+                                Live calculation
+                            </div>
+                        </div>
+
+                        <div class="estimate-grid">
+                            <div class="estimate-item">
+                                <div class="estimate-icon">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="estimate-content">
+                                    <div class="estimate-value" id="estimate-time">~3m</div>
+                                    <div class="estimate-label">Pipeline duration</div>
+                                </div>
+                            </div>
+                            <div class="estimate-item">
+                                <div class="estimate-icon">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="estimate-content">
+                                    <div class="estimate-value" id="estimate-cost">~$0.08</div>
+                                    <div class="estimate-label">Claude API cost</div>
+                                </div>
+                            </div>
+                            <div class="estimate-item">
+                                <div class="estimate-icon">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                </div>
+                                <div class="estimate-content">
+                                    <div class="estimate-value" id="estimate-leads">~12–18</div>
+                                    <div class="estimate-label">Qualified leads</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="estimate-breakdown" id="estimate-breakdown">
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                    Source scraping & dedup
+                                </span>
+                                <span class="breakdown-value" id="bd-scrape">28s</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span id="bd-qualify-label">AI qualification (50 projects)</span>
+                                </span>
+                                <span class="breakdown-value" id="bd-qualify">2m 30s</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    Geocoding & export
+                                </span>
+                                <span class="breakdown-value" id="bd-export">10s</span>
+                            </div>
+                        </div>
+
+                        <div class="estimate-footnote">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Estimates assume Claude Haiku 4.5 at ~3s/project and free-tier scraper latency. Real runtime varies with network conditions and source availability.</span>
+                        </div>
                     </div>
                 </div>
 
@@ -3030,11 +3462,23 @@
                 document.getElementById('wizard-info').textContent = `Step ${currentStep} of 3`;
                 if (currentStep === 3) {
                     document.getElementById('btn-next').innerHTML = `Start Collection<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`;
+                    // Initialize slider gradient and estimate
+                    setTimeout(() => { onSliderChange(); updateEstimate(); }, 0);
                 }
             } else {
                 saveConfig();
                 goToScreen('collection');
                 document.getElementById('nav-collection').disabled = false;
+                renderEstimateSummary();
+            }
+        }
+
+        function renderEstimateSummary() {
+            const est = window.currentEstimate;
+            if (!est) return;
+            const detail = document.getElementById('progress-detail');
+            if (detail) {
+                detail.textContent = `Targeting ${est.targetCount} projects • Est. ${formatDuration(est.durationSec)} • ${formatCost(est.costUsd)}`;
             }
         }
 
@@ -3074,7 +3518,9 @@
                     fis: document.getElementById('src-fis').checked,
                     state: document.getElementById('src-state').checked
                 },
-                threshold: document.getElementById('confidence-threshold').value
+                threshold: document.getElementById('confidence-threshold').value,
+                targetCount: parseInt(document.getElementById('target-count').value, 10),
+                estimate: window.currentEstimate || null
             };
             sessionStorage.setItem('radarConfig', JSON.stringify(config));
 
@@ -3101,7 +3547,122 @@
                 } else {
                     label.classList.remove('selected');
                 }
+                updateEstimate();
             }, 10);
+        }
+
+        // ===== ESTIMATE CALCULATOR =====
+        function onSliderChange() {
+            const slider = document.getElementById('target-count');
+            const value = parseInt(slider.value, 10);
+            document.getElementById('target-count-display').textContent = value;
+            // Update fill gradient
+            const pct = ((value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--gray-200) ${pct}%, var(--gray-200) 100%)`;
+            updateEstimate();
+        }
+
+        function updateEstimate() {
+            const targetEl = document.getElementById('target-count');
+            if (!targetEl) return; // step 3 not rendered yet
+
+            const targetCount = parseInt(targetEl.value, 10);
+            const sources = {
+                news: document.getElementById('src-news')?.checked || false,
+                press: document.getElementById('src-press')?.checked || false,
+                fis: document.getElementById('src-fis')?.checked || false,
+                state: document.getElementById('src-state')?.checked || false
+            };
+
+            // Count selected regions (step 3 region cards — first 4 region checkboxes in step 3)
+            const regionCheckboxes = document.querySelectorAll('#wizard-step-3 > .form-group:first-child .checkbox-card input[type="checkbox"]');
+            const selectedRegions = Math.max(1, Array.from(regionCheckboxes).filter(c => c.checked).length);
+            const enabledSources = Object.values(sources).filter(Boolean).length;
+
+            // ---- TIME (seconds) ----
+            const initTime = 4;
+            const newsTime = sources.news ? selectedRegions * 4 : 0;
+            const pressTime = sources.press ? selectedRegions * 7 : 0;
+            const fisTime = sources.fis ? 12 : 0;
+            const stateTime = sources.state ? selectedRegions * 5 : 0;
+
+            // Scrape volume scales with target count — more projects = deeper scraping
+            const scrapeMultiplier = 0.5 + (targetCount / 100);
+            const scrapeTime = Math.round((newsTime + pressTime + fisTime + stateTime) * scrapeMultiplier);
+
+            const dedupeTime = Math.max(2, Math.round(targetCount * 0.08));
+
+            // Claude Haiku 4.5 ~3s per project; can run 5 in parallel
+            const parallelFactor = 5;
+            const qualifyTime = Math.ceil((targetCount * 3) / parallelFactor);
+
+            const geocodeTime = Math.min(15, Math.round(selectedRegions * 2));
+            const exportTime = 3;
+
+            const totalTime = initTime + scrapeTime + dedupeTime + qualifyTime + geocodeTime + exportTime;
+
+            // ---- COST (USD) ----
+            // Haiku 4.5: $1/M input, $5/M output
+            // ~500 input + 200 output per qualification = $0.0005 + $0.001 = $0.0015/project
+            const costPerProject = 0.0015;
+            const totalCost = targetCount * costPerProject;
+
+            // ---- QUALIFIED LEADS ----
+            // Pass-rate depends on confidence threshold
+            const threshold = parseInt(document.getElementById('confidence-threshold')?.value || '75', 10);
+            const passRate = threshold >= 90 ? [0.10, 0.20]
+                          : threshold >= 75 ? [0.25, 0.40]
+                          : [0.40, 0.60];
+            const minLeads = Math.max(1, Math.round(targetCount * passRate[0]));
+            const maxLeads = Math.max(minLeads + 1, Math.round(targetCount * passRate[1]));
+
+            // ---- WRITE TO DOM ----
+            document.getElementById('estimate-time').textContent = formatDuration(totalTime);
+            document.getElementById('estimate-cost').textContent = formatCost(totalCost);
+            document.getElementById('estimate-leads').textContent = `~${minLeads}–${maxLeads}`;
+
+            document.getElementById('bd-scrape').textContent = formatDuration(initTime + scrapeTime + dedupeTime);
+            document.getElementById('bd-qualify').textContent = formatDuration(qualifyTime);
+            document.getElementById('bd-qualify-label').textContent = `AI qualification (${targetCount} projects)`;
+            document.getElementById('bd-export').textContent = formatDuration(geocodeTime + exportTime);
+
+            // Warn if no sources selected
+            const timeEl = document.getElementById('estimate-time');
+            if (enabledSources === 0) {
+                timeEl.textContent = '—';
+                timeEl.style.color = 'var(--danger)';
+                document.getElementById('estimate-cost').textContent = '—';
+                document.getElementById('estimate-leads').textContent = '0';
+            } else {
+                timeEl.style.color = '';
+            }
+
+            window.currentEstimate = {
+                durationSec: totalTime,
+                costUsd: totalCost,
+                expectedMinLeads: minLeads,
+                expectedMaxLeads: maxLeads,
+                targetCount,
+                regions: selectedRegions,
+                sources: enabledSources
+            };
+        }
+
+        function formatDuration(seconds) {
+            if (seconds < 60) return `${seconds}s`;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (m < 60) return s === 0 ? `${m}m` : `${m}m ${s}s`;
+            const h = Math.floor(m / 60);
+            const rm = m % 60;
+            return rm === 0 ? `${h}h` : `${h}h ${rm}m`;
+        }
+
+        function formatCost(usd) {
+            if (usd < 0.01) return '<$0.01';
+            if (usd < 1) return `~$${usd.toFixed(2)}`;
+            if (usd < 10) return `~$${usd.toFixed(2)}`;
+            return `~$${Math.round(usd)}`;
         }
 
         // Validate Anthropic key as user types
@@ -3138,67 +3699,99 @@
                 s.querySelector('.stage-counter').textContent = '—';
             });
 
+            // Read config to scale the simulation
+            const est = window.currentEstimate || { targetCount: 10, durationSec: 60 };
+            const target = est.targetCount;
+            // Animation runs faster than real estimate — cap at ~25s total for demo watchability
+            const animSpeedFactor = Math.max(0.05, Math.min(1, 25 / Math.max(est.durationSec, 25)));
+
+            // Scale outputs proportionally
+            const newsArticles = Math.round(target * 0.55);
+            const pressArticles = Math.round(target * 0.35);
+            const fisArticles = Math.round(target * 0.10);
+            const totalRaw = newsArticles + pressArticles + fisArticles;
+            const duplicates = Math.round(totalRaw * 0.12);
+            const uniqueProjects = totalRaw - duplicates;
+            const finalCount = Math.min(target, uniqueProjects);
+            const expectedHigh = Math.round(finalCount * 0.20);
+            const expectedMedium = Math.round(finalCount * 0.45);
+            const expectedLow = finalCount - expectedHigh - expectedMedium;
+
+            // Sample qualification messages — show a representative subset
+            const sampleQualLogs = [
+                { type: 'success', msg: `[1/${finalCount}] Medizinisches Versorgungszentrum Berlin-Charlottenburg → HIGH (92%)` },
+                { type: 'success', msg: `[2/${finalCount}] Ärztezentrum Leipzig Zentrum-Ost Phase 2 → MEDIUM (91%)` },
+                { type: 'success', msg: `[3/${finalCount}] Praxisklinik Dresden Altstadt-Zentrum → MEDIUM (85%)` },
+                { type: 'success', msg: `[4/${finalCount}] Gesundheitszentrum Magdeburg-Südstadt → LOW (80%)` },
+                { type: 'success', msg: `[5/${finalCount}] Ärztezentrum Potsdam Innenstadt → MEDIUM (88%)` },
+            ];
+            if (finalCount > 10) {
+                sampleQualLogs.push({ type: 'info', msg: `Processing remaining ${finalCount - 5} projects in parallel (5 concurrent)...` });
+                sampleQualLogs.push({ type: 'success', msg: `[${Math.round(finalCount/2)}/${finalCount}] Halfway — ${Math.round(expectedHigh/2)} high-quality leads so far` });
+            }
+            sampleQualLogs.push({ type: 'success', msg: `Qualification complete: ${expectedHigh} high, ${expectedMedium} medium, ${expectedLow} low` });
+
+            // Build stages with scaled durations
             const stages = [
-                { id: 'init', title: 'Initializing pipeline', duration: 600, count: '', logs: [
-                    { type: 'info', msg: 'Loading configuration...' },
+                { id: 'init', durationSec: 4, count: '', logs: [
+                    { type: 'info', msg: `Loading configuration (target: ${target} projects)` },
                     { type: 'info', msg: 'Validating API credentials' },
                     { type: 'success', msg: 'Pipeline ready ✓' }
                 ]},
-                { id: 'news', title: 'Scraping Google News', duration: 1500, count: '8 articles', logs: [
+                { id: 'news', durationSec: 12 + Math.round(target * 0.15), count: `${newsArticles} articles`, logs: [
                     { type: 'info', msg: 'GET https://news.google.com/rss/search?q=Ärztehaus' },
-                    { type: 'info', msg: 'Parsing RSS feed for Berlin region...' },
-                    { type: 'success', msg: 'Found 3 articles in Berlin' },
-                    { type: 'success', msg: 'Found 2 articles in Leipzig' },
-                    { type: 'success', msg: 'Found 3 articles in Dresden region' }
+                    { type: 'info', msg: `Parsing RSS feed across ${est.regions} regions...` },
+                    { type: 'success', msg: `Found ${Math.round(newsArticles*0.4)} articles in Berlin region` },
+                    { type: 'success', msg: `Found ${Math.round(newsArticles*0.3)} articles in Saxony` },
+                    { type: 'success', msg: `Found ${Math.round(newsArticles*0.3)} articles in Saxony-Anhalt` }
                 ]},
-                { id: 'press', title: 'Searching press archives', duration: 1400, count: '5 articles', logs: [
+                { id: 'press', durationSec: 18 + Math.round(target * 0.2), count: `${pressArticles} articles`, logs: [
                     { type: 'info', msg: 'Querying Bing News API...' },
                     { type: 'info', msg: 'Scanning developer websites' },
-                    { type: 'warning', msg: 'Rate limit reached on bing.com (60/min)' },
-                    { type: 'success', msg: 'Retrieved 5 additional articles' }
+                    { type: 'warning', msg: 'Rate limit reached on bing.com (60/min) — backing off' },
+                    { type: 'success', msg: `Retrieved ${pressArticles} additional articles` }
                 ]},
-                { id: 'dedupe', title: 'Deduplicating projects', duration: 700, count: '10 unique', logs: [
+                { id: 'dedupe', durationSec: Math.max(3, Math.round(target * 0.08)), count: `${uniqueProjects} unique`, logs: [
                     { type: 'info', msg: 'Comparing project names with fuzzy match (threshold: 0.85)' },
-                    { type: 'warning', msg: 'Removed 3 duplicates' },
-                    { type: 'success', msg: '10 unique projects identified' }
+                    { type: 'warning', msg: `Removed ${duplicates} duplicates` },
+                    { type: 'success', msg: `${uniqueProjects} unique projects identified` }
                 ]},
-                { id: 'qualify', title: 'AI qualification (Claude)', duration: 2500, count: '10/10', logs: [
+                { id: 'qualify', durationSec: Math.ceil((finalCount * 3) / 5), count: `${finalCount}/${finalCount}`, logs: [
                     { type: 'info', msg: 'POST https://api.anthropic.com/v1/messages' },
-                    { type: 'info', msg: 'Model: claude-haiku-4-5' },
-                    { type: 'success', msg: '[1/10] Medizinisches Versorgungszentrum Berlin-Charlottenburg → HIGH (92%)' },
-                    { type: 'success', msg: '[2/10] Ärztezentrum Leipzig Zentrum-Ost Phase 2 → MEDIUM (91%)' },
-                    { type: 'success', msg: '[3/10] Praxisklinik Dresden Altstadt-Zentrum → MEDIUM (85%)' },
-                    { type: 'success', msg: '[4/10] Gesundheitszentrum Magdeburg-Südstadt → LOW (80%)' },
-                    { type: 'success', msg: '[5/10] Ärztezentrum Potsdam Innenstadt → MEDIUM (88%)' },
-                    { type: 'info', msg: 'Processing remaining 5 projects in parallel...' },
-                    { type: 'success', msg: 'Qualification complete: 2 high, 5 medium, 3 low' }
+                    { type: 'info', msg: 'Model: claude-haiku-4-5-20251001 (5 concurrent calls)' },
+                    ...sampleQualLogs
                 ]},
-                { id: 'geocode', title: 'Geocoding locations', duration: 800, count: '7 cities', logs: [
+                { id: 'geocode', durationSec: Math.min(15, Math.round(est.regions * 2)), count: `${est.regions * 2} cities`, logs: [
                     { type: 'info', msg: 'Resolving city coordinates via Nominatim...' },
-                    { type: 'success', msg: 'Geocoded 7 unique cities' }
+                    { type: 'success', msg: `Geocoded ${est.regions * 2} unique cities` }
                 ]},
-                { id: 'export', title: 'Exporting to dashboard', duration: 500, count: '10 leads', logs: [
+                { id: 'export', durationSec: 3, count: `${finalCount} leads`, logs: [
                     { type: 'info', msg: 'Writing output/leads.csv' },
                     { type: 'info', msg: 'Generating dashboard JSON' },
-                    { type: 'success', msg: '✓ Pipeline complete — 10 qualified leads ready' }
+                    { type: 'success', msg: `✓ Pipeline complete — ${finalCount} qualified leads ready` }
                 ]}
             ];
 
-            const totalDuration = stages.reduce((s, st) => s + st.duration, 0);
-            let elapsed = 0;
+            const totalDurationSec = stages.reduce((s, st) => s + st.durationSec, 0);
+            let elapsedSec = 0;
 
             for (const stage of stages) {
                 const el = document.querySelector(`[data-stage="${stage.id}"]`);
                 el.classList.add('active');
                 el.querySelector('.stage-status').textContent = 'Running...';
+                const stageEl = el.querySelector('.stage-title');
 
-                addLog('info', `→ ${stage.title}`);
+                addLog('info', `→ ${stageEl.textContent}`);
+
+                // Convert seconds to ms with the animation speed factor
+                const stageMs = stage.durationSec * 1000 * animSpeedFactor;
+                const perLogMs = stageMs / stage.logs.length;
 
                 for (let i = 0; i < stage.logs.length; i++) {
-                    await sleep(stage.duration / stage.logs.length);
+                    await sleep(perLogMs);
                     addLog(stage.logs[i].type, stage.logs[i].msg);
-                    elapsed += stage.duration / stage.logs.length;
-                    updateProgress(elapsed / totalDuration * 100, stage.title);
+                    elapsedSec += stage.durationSec / stage.logs.length;
+                    updateProgress(elapsedSec / totalDurationSec * 100, stageEl.textContent, Math.round(elapsedSec));
                 }
 
                 el.classList.remove('active');
@@ -3207,13 +3800,13 @@
                 el.querySelector('.stage-counter').textContent = stage.count || '✓';
             }
 
-            updateProgress(100, 'Done');
-            document.getElementById('progress-detail').textContent = 'All 10 leads qualified successfully';
+            updateProgress(100, 'Done', totalDurationSec);
+            document.getElementById('progress-detail').textContent = `${finalCount} leads qualified in ${formatDuration(totalDurationSec)} (simulated)`;
 
             btn.style.display = 'none';
             document.getElementById('btn-view-results').style.display = 'inline-flex';
 
-            showToast('success', 'Pipeline complete — 10 leads ready');
+            showToast('success', `Pipeline complete — ${finalCount} leads ready`);
 
             await loadProjects();
         }
@@ -3228,10 +3821,13 @@
             log.scrollTop = log.scrollHeight;
         }
 
-        function updateProgress(percent, label) {
+        function updateProgress(percent, label, elapsedSec) {
             document.getElementById('progress-fill').style.width = percent + '%';
             document.getElementById('progress-text').textContent = Math.round(percent) + '%';
-            document.getElementById('progress-detail').textContent = label;
+            const detail = elapsedSec !== undefined
+                ? `${label} • ${formatDuration(elapsedSec)} elapsed`
+                : label;
+            document.getElementById('progress-detail').textContent = detail;
         }
 
         function sleep(ms) {
