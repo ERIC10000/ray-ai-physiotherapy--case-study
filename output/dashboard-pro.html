@@ -1348,6 +1348,97 @@
             gap: 6px;
         }
 
+        /* ===== EXPORT DROPDOWN ===== */
+        .export-wrap {
+            position: relative;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .export-btn .chev {
+            width: 12px;
+            height: 12px;
+            transition: transform 0.15s;
+        }
+
+        .export-btn[aria-expanded="true"] .chev {
+            transform: rotate(180deg);
+        }
+
+        .export-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 280px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 6px;
+            z-index: 50;
+            display: none;
+            animation: slideIn 0.15s ease;
+        }
+
+        .export-menu.open {
+            display: block;
+        }
+
+        .export-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: background 0.1s;
+            color: var(--gray-700);
+        }
+
+        .export-item:hover {
+            background: var(--gray-50);
+        }
+
+        .export-item:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+        }
+
+        .export-item > svg {
+            width: 18px;
+            height: 18px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .export-item-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-900);
+            line-height: 1.3;
+        }
+
+        .export-item-meta {
+            font-size: 11px;
+            color: var(--gray-500);
+            margin-top: 1px;
+        }
+
+        .export-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 4px 8px;
+        }
+
         .view-toggle {
             display: inline-flex;
             background: var(--gray-100);
@@ -2674,6 +2765,46 @@
                 font-size: 12px;
             }
 
+            .toolbar-right .btn span {
+                display: none;
+            }
+
+            .export-menu {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                top: auto;
+                bottom: 12px;
+                min-width: 0;
+                width: auto;
+                padding: 8px;
+                box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+                border-radius: var(--radius-xl);
+            }
+
+            .export-menu::before {
+                content: '';
+                display: block;
+                width: 36px;
+                height: 4px;
+                background: var(--gray-300);
+                border-radius: 2px;
+                margin: 4px auto 8px;
+            }
+
+            .export-item {
+                padding: 12px;
+                min-height: 44px;
+            }
+
+            .export-item-title {
+                font-size: 14px;
+            }
+
+            .export-item-meta {
+                font-size: 12px;
+            }
+
             .view-toggle {
                 flex: 1;
                 margin-left: 8px;
@@ -3834,8 +3965,39 @@
             <div class="toolbar-right">
                 <button class="btn btn-secondary" onclick="loadProjects()" title="Refresh data">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Refresh
+                    <span>Refresh</span>
                 </button>
+                <div class="export-wrap">
+                    <button class="btn btn-secondary export-btn" onclick="toggleExportMenu(event)" title="Export leads" aria-haspopup="true" aria-expanded="false" id="export-toggle">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Export</span>
+                        <svg class="chev" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="export-menu" id="export-menu" role="menu">
+                        <button class="export-item" role="menuitem" onclick="exportLeads('csv', true)">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <div>
+                                <div class="export-item-title">CSV — Current view</div>
+                                <div class="export-item-meta" id="export-item-meta-filtered">Respects search + filters</div>
+                            </div>
+                        </button>
+                        <button class="export-item" role="menuitem" onclick="exportLeads('csv', false)">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            <div>
+                                <div class="export-item-title">CSV — All leads</div>
+                                <div class="export-item-meta" id="export-item-meta-all">Full dataset, no filters applied</div>
+                            </div>
+                        </button>
+                        <div class="export-divider"></div>
+                        <button class="export-item" role="menuitem" onclick="exportLeads('json', true)">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            <div>
+                                <div class="export-item-title">JSON — Current view</div>
+                                <div class="export-item-meta">For API integration or scripts</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
                 <div class="view-toggle">
                     <button class="view-toggle-btn active" data-view="split" onclick="setView('split')">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -4271,6 +4433,113 @@
         // Backwards-compat: some onclick handlers in saveConfig still call this name
         const testAzureConnection = testConnection;
         const onAzureFieldChange = onProviderFieldChange;
+
+        // ===== CSV / JSON EXPORT =====
+        const EXPORT_COLUMNS = [
+            'Name', 'City', 'Lead Quality', 'Confidence (%)', 'Physio Suitability (1-5)',
+            'Estimated Stage', 'Ground Floor', 'Est. Size (sqm)', 'Accessibility',
+            'Is Healthcare Building', 'Medical Office Building',
+            'Source', 'URL', 'Reasoning', 'Description'
+        ];
+
+        function csvEscape(value) {
+            if (value === null || value === undefined) return '';
+            const str = String(value);
+            // Wrap in quotes if value contains comma, quote, newline, or leading/trailing whitespace
+            if (/[",\n\r]/.test(str) || str !== str.trim()) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function buildCsv(rows) {
+            const header = EXPORT_COLUMNS.map(csvEscape).join(',');
+            const body = rows.map(row =>
+                EXPORT_COLUMNS.map(col => csvEscape(row[col])).join(',')
+            ).join('\r\n');
+            return header + '\r\n' + body;
+        }
+
+        function downloadBlob(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // Give the browser a tick before revoking the URL
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function timestamp() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+
+        function exportLeads(format, filteredOnly) {
+            const rows = filteredOnly ? filteredProjects() : allProjects;
+            if (!rows.length) {
+                showToast('error', 'Nothing to export — no leads match current filters');
+                closeExportMenu();
+                return;
+            }
+
+            const scope = filteredOnly ? 'filtered' : 'all';
+            const base = `aerztehaus-radar-${scope}-${timestamp()}`;
+
+            if (format === 'csv') {
+                // UTF-8 BOM so Excel opens German umlauts correctly
+                const csv = '﻿' + buildCsv(rows);
+                downloadBlob(csv, `${base}.csv`, 'text/csv;charset=utf-8');
+                showToast('success', `Exported ${rows.length} lead${rows.length === 1 ? '' : 's'} to CSV`);
+            } else if (format === 'json') {
+                const payload = {
+                    exported_at: new Date().toISOString(),
+                    scope: scope,
+                    total: rows.length,
+                    leads: rows
+                };
+                downloadBlob(JSON.stringify(payload, null, 2), `${base}.json`, 'application/json;charset=utf-8');
+                showToast('success', `Exported ${rows.length} lead${rows.length === 1 ? '' : 's'} to JSON`);
+            }
+
+            closeExportMenu();
+        }
+
+        function toggleExportMenu(e) {
+            e?.stopPropagation();
+            const menu = document.getElementById('export-menu');
+            const toggle = document.getElementById('export-toggle');
+            const isOpen = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(isOpen));
+
+            if (isOpen) {
+                // Update the "Current view" meta to reflect filtered count
+                const filtered = filteredProjects();
+                const all = allProjects.length;
+                const f = document.getElementById('export-item-meta-filtered');
+                const a = document.getElementById('export-item-meta-all');
+                if (f) f.textContent = `${filtered.length} of ${all} lead${all === 1 ? '' : 's'} (search + filters)`;
+                if (a) a.textContent = `${all} lead${all === 1 ? '' : 's'}`;
+            }
+        }
+
+        function closeExportMenu() {
+            const menu = document.getElementById('export-menu');
+            const toggle = document.getElementById('export-toggle');
+            if (menu) menu.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // Close export menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.export-wrap')) {
+                closeExportMenu();
+            }
+        });
 
         async function realQualifyOne(project) {
             const saved = sessionStorage.getItem('radarConfig');
@@ -4984,6 +5253,7 @@
             if (e.key === 'Escape') {
                 closeModal();
                 closeMobileMenu();
+                closeExportMenu();
             }
         });
 
