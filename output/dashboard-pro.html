@@ -2252,21 +2252,340 @@
             font-size: 13px;
         }
 
-        /* Custom map markers */
-        .map-marker {
+        /* ===== MAP PIN MARKERS ===== */
+        .map-pin {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
+            transform-origin: center bottom;
+            will-change: transform;
+        }
+
+        .map-pin:hover {
+            transform: scale(1.15) translateY(-2px);
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+            z-index: 1000 !important;
+        }
+
+        .map-pin.selected {
+            transform: scale(1.3) translateY(-4px);
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4));
+            z-index: 1001 !important;
+            animation: pinPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pinPulse {
+            0%, 100% { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 0 rgba(79,70,229,0.6)); }
+            50% { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 12px rgba(79,70,229,0.8)); }
+        }
+
+        .map-pin.entrance {
+            animation: pinDrop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+        }
+
+        @keyframes pinDrop {
+            from { opacity: 0; transform: translateY(-30px) scale(0.4); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .map-pin svg {
+            display: block;
+        }
+
+        .map-pin-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -65%);
+            color: white;
+            font-weight: 800;
+            font-size: 13px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-variant-numeric: tabular-nums;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ===== MAP POPUP (custom Leaflet popup) ===== */
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--radius-lg) !important;
+            box-shadow: var(--shadow-xl) !important;
+            padding: 0 !important;
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content {
+            margin: 0 !important;
+            min-width: 260px;
+            max-width: 320px;
+        }
+
+        .leaflet-popup-tip {
+            box-shadow: var(--shadow-md) !important;
+        }
+
+        .leaflet-popup-close-button {
+            top: 10px !important;
+            right: 10px !important;
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 18px !important;
+            color: var(--gray-500) !important;
+            background: var(--gray-100) !important;
+            border-radius: 50% !important;
+            line-height: 22px !important;
+            font-weight: 600 !important;
+            transition: all 0.15s;
+        }
+
+        .leaflet-popup-close-button:hover {
+            background: var(--gray-200) !important;
+            color: var(--gray-900) !important;
+        }
+
+        .map-popup-header {
+            padding: 12px 14px;
+            background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .map-popup-city {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 2px;
+        }
+
+        .map-popup-count {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: var(--gray-500);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-popup-count-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .map-popup-count-pill.high { background: var(--success-bg); color: var(--success-dark); }
+        .map-popup-count-pill.medium { background: var(--warning-bg); color: var(--warning-dark); }
+        .map-popup-count-pill.low { background: var(--danger-bg); color: var(--danger-dark); }
+
+        .map-popup-body {
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .map-popup-item {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            padding: 0;
+            border-bottom: 1px solid var(--gray-100);
+            cursor: pointer;
+            transition: background 0.1s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .map-popup-item:hover {
+            background: var(--gray-50);
+        }
+
+        .map-popup-item:last-child {
+            border-bottom: none;
+        }
+
+        .map-popup-item-stripe {
+            width: 3px;
+            flex-shrink: 0;
+        }
+
+        .map-popup-item-stripe.high { background: var(--success); }
+        .map-popup-item-stripe.medium { background: var(--warning); }
+        .map-popup-item-stripe.low { background: var(--danger); }
+
+        .map-popup-item-body {
+            flex: 1;
+            padding: 10px 12px;
+            min-width: 0;
+        }
+
+        .map-popup-item-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-900);
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .map-popup-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10.5px;
+        }
+
+        .map-popup-item-quality {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .map-popup-item-quality.high { color: var(--success-dark); }
+        .map-popup-item-quality.medium { color: var(--warning-dark); }
+        .map-popup-item-quality.low { color: var(--danger-dark); }
+
+        .map-popup-item-confidence {
+            color: var(--gray-500);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .map-popup-item-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: var(--gray-300);
+            transition: transform 0.15s, color 0.15s;
+        }
+
+        .map-popup-item:hover .map-popup-item-arrow {
+            color: var(--primary);
+            transform: translateX(2px);
+        }
+
+        .map-popup-item-arrow svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ===== MAP STYLE TOGGLE ===== */
+        .leaflet-control-mapstyle {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 3px;
+            display: inline-flex;
+            border: 1px solid var(--gray-200);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mapstyle-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mapstyle-btn:hover:not(.active) {
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
+        .mapstyle-btn.active {
+            background: var(--gray-900);
+            color: white;
+        }
+
+        .mapstyle-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ===== FULLSCREEN BUTTON ===== */
+        .leaflet-control-fullscreen {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0;
+            border: 1px solid var(--gray-200);
+        }
+
+        .fullscreen-btn {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--gray-700);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            border: 3px solid white;
-            transition: transform 0.2s;
+            border-radius: 5px;
+            transition: all 0.15s;
         }
 
-        .map-marker:hover {
-            transform: scale(1.1);
+        .fullscreen-btn:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .fullscreen-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Leaflet control containers (override defaults) */
+        .leaflet-control {
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .leaflet-control-zoom {
+            border: 1px solid var(--gray-200) !important;
+            border-radius: var(--radius) !important;
+            box-shadow: var(--shadow) !important;
+            overflow: hidden;
+        }
+
+        .leaflet-control-zoom a {
+            background: white !important;
+            color: var(--gray-700) !important;
+            border-color: var(--gray-200) !important;
+            font-size: 16px !important;
+            line-height: 28px !important;
+            width: 30px !important;
+            height: 30px !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--gray-50) !important;
+            color: var(--gray-900) !important;
+        }
+
+        .leaflet-control-scale-line {
+            background: rgba(255,255,255,0.85) !important;
+            border: 1px solid var(--gray-300) !important;
+            border-top: none !important;
+            color: var(--gray-700) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 2px 6px !important;
         }
 
         .legend {
@@ -2276,6 +2595,7 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--gray-200);
             font-size: 12px;
+            font-family: 'Inter', sans-serif;
         }
 
         .legend-title {
@@ -2304,6 +2624,42 @@
             border-radius: 50%;
             border: 2px solid white;
             box-shadow: 0 0 0 1px var(--gray-200);
+        }
+
+        /* Loading shimmer on map until first render */
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: var(--radius);
+            padding: 10px 16px;
+            box-shadow: var(--shadow);
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .map-loading.show {
+            opacity: 1;
+        }
+
+        .map-loading .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         /* ===== MOBILE MENU TOGGLE ===== */
@@ -3175,12 +3531,55 @@
 
             /* Map markers smaller on mobile */
             .legend {
-                padding: 10px 12px;
-                font-size: 11px;
+                padding: 8px 10px;
+                font-size: 10.5px;
             }
 
             .legend-title {
-                font-size: 10px;
+                font-size: 9.5px;
+                margin-bottom: 6px;
+            }
+
+            .legend-dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            /* Compact map controls on mobile */
+            .mapstyle-btn {
+                padding: 6px 8px;
+                font-size: 10.5px;
+            }
+
+            .mapstyle-btn svg {
+                width: 11px;
+                height: 11px;
+            }
+
+            /* Popup tweaks */
+            .leaflet-popup-content {
+                min-width: 220px;
+                max-width: 280px;
+            }
+
+            .map-popup-header {
+                padding: 10px 12px;
+            }
+
+            .map-popup-city {
+                font-size: 13px;
+            }
+
+            .map-popup-count {
+                font-size: 10.5px;
+            }
+
+            .map-popup-item-body {
+                padding: 8px 10px;
+            }
+
+            .map-popup-item-title {
+                font-size: 11.5px;
             }
         }
 
@@ -4963,45 +5362,153 @@
         }
 
         // ===== MAP =====
+        let tileLayers = {};
+        let currentMapStyle = 'light';
+        let cityMarkers = {}; // city name -> marker (for selection sync)
+        let selectedCity = null;
+
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([51.8, 10.5], 6);
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([51.3, 10.5], 6);
+
+            // Three tile-layer choices
+            tileLayers.light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap · © CartoDB', maxZoom: 19
+            });
+            tileLayers.streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors', maxZoom: 19
+            });
+            tileLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles © Esri', maxZoom: 19
+            });
+            tileLayers.light.addTo(map);
+
+            // Custom Leaflet attribution (compact)
+            L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
+
+            // Scale bar
+            L.control.scale({ position: 'bottomleft', metric: true, imperial: false, maxWidth: 140 }).addTo(map);
+
+            // Standard zoom (restyled via CSS)
             L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© OpenStreetMap, © CartoDB',
-                maxZoom: 19
-            }).addTo(map);
+            // Map-style toggle (top-right)
+            const styleControl = L.control({ position: 'topright' });
+            styleControl.onAdd = function() {
+                const div = L.DomUtil.create('div', 'leaflet-control-mapstyle');
+                L.DomEvent.disableClickPropagation(div);
+                div.innerHTML = `
+                    <button class="mapstyle-btn active" data-style="light" onclick="setMapStyle('light')" title="Light map">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        Map
+                    </button>
+                    <button class="mapstyle-btn" data-style="streets" onclick="setMapStyle('streets')" title="Streets">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Streets
+                    </button>
+                    <button class="mapstyle-btn" data-style="satellite" onclick="setMapStyle('satellite')" title="Satellite">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Satellite
+                    </button>
+                `;
+                return div;
+            };
+            styleControl.addTo(map);
 
+            // Fullscreen toggle (top-right, below style toggle)
+            const fsControl = L.control({ position: 'topright' });
+            fsControl.onAdd = function() {
+                const div = L.DomUtil.create('div', 'leaflet-control-fullscreen');
+                L.DomEvent.disableClickPropagation(div);
+                div.innerHTML = `
+                    <button class="fullscreen-btn" onclick="toggleMapFullscreen()" title="Toggle fullscreen" id="map-fs-btn">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    </button>
+                `;
+                return div;
+            };
+            fsControl.addTo(map);
+
+            // Quality legend (bottom-right)
             const legend = L.control({ position: 'bottomright' });
             legend.onAdd = function() {
                 const div = L.DomUtil.create('div', 'legend');
                 div.innerHTML = `
                     <div class="legend-title">Lead Quality</div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background:#10b981;"></div>
-                        <span>High (90%+)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background:#f59e0b;"></div>
-                        <span>Medium (75-89%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background:#ef4444;"></div>
-                        <span>Low (&lt;75%)</span>
-                    </div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div><span>High (90%+)</span></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div><span>Medium (75–89%)</span></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div><span>Low (&lt;75%)</span></div>
                 `;
                 return div;
             };
             legend.addTo(map);
+
+            // Reset selected city when clicking on empty map
+            map.on('click', () => clearMapSelection());
+
+            // Track user interaction so auto-fit doesn't keep snapping the view
+            const markInteracted = () => { window.mapUserHasInteracted = true; };
+            map.on('zoomstart movestart dragstart', markInteracted);
+        }
+
+        function setMapStyle(style) {
+            if (!tileLayers[style] || style === currentMapStyle) return;
+            map.removeLayer(tileLayers[currentMapStyle]);
+            tileLayers[style].addTo(map);
+            currentMapStyle = style;
+            document.querySelectorAll('.mapstyle-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.style === style);
+            });
+        }
+
+        function toggleMapFullscreen() {
+            const el = document.querySelector('.map-panel');
+            if (!document.fullscreenElement) {
+                (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+            } else {
+                (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+            }
+            setTimeout(() => map && map.invalidateSize(), 300);
+        }
+
+        function selectCityMarker(city, options = {}) {
+            const { pan = true, zoom = 10 } = options;
+            // Clear previous selection
+            Object.values(cityMarkers).forEach(m => m._iconEl?.classList.remove('selected'));
+            const marker = cityMarkers[city];
+            if (!marker) return;
+            marker._iconEl?.classList.add('selected');
+            selectedCity = city;
+            if (pan && cityCoordinates[city]) {
+                map.flyTo(cityCoordinates[city], Math.max(map.getZoom(), zoom), { duration: 0.7 });
+            }
+        }
+
+        function clearMapSelection() {
+            Object.values(cityMarkers).forEach(m => m._iconEl?.classList.remove('selected'));
+            selectedCity = null;
         }
 
         // ===== DATA =====
         async function loadProjects() {
             try {
+                // Show a subtle loading hint over the map
+                const mapEl = document.querySelector('.map-panel');
+                if (mapEl && !mapEl.querySelector('.map-loading')) {
+                    const loading = document.createElement('div');
+                    loading.className = 'map-loading show';
+                    loading.innerHTML = `<div class="spinner"></div><span>Loading leads…</span>`;
+                    mapEl.appendChild(loading);
+                }
+
                 const response = await fetch('/api/leads');
                 if (!response.ok) throw new Error('Failed to load leads');
                 const data = await response.json();
                 allProjects = data.leads;
+
+                // Reset auto-fit so fresh data re-fits the view
+                window.mapUserHasInteracted = false;
+                window.mapFittedOnce = false;
+                selectedCity = null;
 
                 document.getElementById('stat-total').textContent = data.total;
                 document.getElementById('stat-high').textContent = data.high;
@@ -5013,8 +5520,15 @@
 
                 renderProjects();
                 if (map) renderMap();
+
+                // Remove loading hint
+                document.querySelectorAll('.map-loading').forEach(el => {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 200);
+                });
             } catch (e) {
                 console.error(e);
+                document.querySelectorAll('.map-loading').forEach(el => el.remove());
                 showToast('error', 'Failed to load data — is the server running?');
             }
         }
@@ -5092,9 +5606,86 @@
             }).join('');
         }
 
+        function buildPinSVG(color, count) {
+            // Teardrop pin. The size scales gently with cluster count.
+            const w = count >= 10 ? 40 : count >= 3 ? 36 : 32;
+            const h = w * 1.25;
+            return `
+                <svg width="${w}" height="${h}" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="g${color.replace('#','')}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${color}" stop-opacity="1"/>
+                            <stop offset="100%" stop-color="${color}" stop-opacity="0.85"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M16 0 C7.16 0 0 7.16 0 16 C0 28 16 40 16 40 S32 28 32 16 C32 7.16 24.84 0 16 0 Z"
+                          fill="url(#g${color.replace('#','')})" stroke="white" stroke-width="2.5"/>
+                    <circle cx="16" cy="16" r="${count > 1 ? 9 : 5}" fill="white" fill-opacity="0.95"/>
+                </svg>
+            `;
+        }
+
+        function buildPopupHtml(city, items) {
+            const high = items.filter(p => p['Lead Quality'] === 'high').length;
+            const medium = items.filter(p => p['Lead Quality'] === 'medium').length;
+            const low = items.filter(p => p['Lead Quality'] === 'low').length;
+
+            const breakdownPills = [
+                high > 0 ? `<span class="map-popup-count-pill high">${high} High</span>` : '',
+                medium > 0 ? `<span class="map-popup-count-pill medium">${medium} Med</span>` : '',
+                low > 0 ? `<span class="map-popup-count-pill low">${low} Low</span>` : '',
+            ].filter(Boolean).join('');
+
+            const sortedItems = [...items].sort((a, b) => {
+                const order = { high: 1, medium: 2, low: 3 };
+                return order[a['Lead Quality']] - order[b['Lead Quality']]
+                    || b['Confidence (%)'] - a['Confidence (%)'];
+            });
+
+            const itemRows = sortedItems.slice(0, 5).map(p => {
+                const q = p['Lead Quality'];
+                const idx = allProjects.indexOf(p);
+                return `
+                    <a class="map-popup-item" onclick="event.preventDefault(); showProject(${idx});">
+                        <div class="map-popup-item-stripe ${q}"></div>
+                        <div class="map-popup-item-body">
+                            <div class="map-popup-item-title">${escapeHtml(p.Name)}</div>
+                            <div class="map-popup-item-meta">
+                                <span class="map-popup-item-quality ${q}">${q}</span>
+                                <span class="map-popup-item-confidence">${p['Confidence (%)']}% confidence</span>
+                            </div>
+                        </div>
+                        <div class="map-popup-item-arrow">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            const moreLine = items.length > 5
+                ? `<div style="padding:8px 14px;font-size:11px;color:var(--gray-500);text-align:center;border-top:1px solid var(--gray-100);">+ ${items.length - 5} more in this city</div>`
+                : '';
+
+            return `
+                <div class="map-popup-header">
+                    <div class="map-popup-city">${escapeHtml(city)}</div>
+                    <div class="map-popup-count">
+                        <span>${items.length} project${items.length === 1 ? '' : 's'}</span>
+                        ${breakdownPills ? '·' : ''}
+                        ${breakdownPills}
+                    </div>
+                </div>
+                <div class="map-popup-body">
+                    ${itemRows}
+                    ${moreLine}
+                </div>
+            `;
+        }
+
         function renderMap() {
             mapMarkers.forEach(m => map.removeLayer(m));
             mapMarkers = [];
+            cityMarkers = {};
 
             const projects = filteredProjects();
             const byCity = {};
@@ -5102,43 +5693,69 @@
                 (byCity[p.City] = byCity[p.City] || []).push(p);
             });
 
+            const bounds = [];
+            let delay = 0;
+
             Object.entries(byCity).forEach(([city, items]) => {
                 if (!cityCoordinates[city]) return;
+
+                // Best quality for this city (high beats medium beats low)
                 const bestQuality = items.reduce((b, p) => {
                     const o = { high: 1, medium: 2, low: 3 };
                     return o[p['Lead Quality']] < o[b['Lead Quality']] ? p : b;
                 });
                 const color = qualityColors[bestQuality['Lead Quality']];
-                const size = 32 + Math.min(items.length * 4, 16);
+                const count = items.length;
+
+                const w = count >= 10 ? 40 : count >= 3 ? 36 : 32;
+                const h = Math.round(w * 1.25);
+
+                const animDelay = delay;
+                delay += 50;
 
                 const icon = L.divIcon({
                     className: '',
-                    html: `<div class="map-marker" style="background:${color};width:${size}px;height:${size}px;font-size:${size/3}px;">${items.length}</div>`,
-                    iconSize: [size, size],
-                    iconAnchor: [size/2, size/2]
+                    html: `<div class="map-pin entrance" style="animation-delay:${animDelay}ms;">
+                            ${buildPinSVG(color, count)}
+                            ${count > 1 ? `<span class="map-pin-label">${count}</span>` : ''}
+                          </div>`,
+                    iconSize: [w, h],
+                    iconAnchor: [w/2, h],   // anchor at the tip of the pin
+                    popupAnchor: [0, -h + 4]
                 });
 
-                const popupContent = `
-                    <div style="font-family:Inter,sans-serif;padding:4px;min-width:200px;">
-                        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#111827;">${city}</div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">${items.length} project${items.length>1?'s':''}</div>
-                        ${items.slice(0,3).map(p => `
-                            <div style="padding:6px 0;border-top:1px solid #e5e7eb;cursor:pointer;font-size:12px;" onclick="showProject(${allProjects.indexOf(p)})">
-                                <div style="color:#374151;font-weight:500;">${escapeHtml(p.Name.substring(0, 40))}${p.Name.length > 40 ? '...' : ''}</div>
-                                <div style="margin-top:2px;">
-                                    <span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;background:${color}20;color:${color};">${p['Lead Quality'].toUpperCase()}</span>
-                                    <span style="color:#9ca3af;font-size:10px;margin-left:4px;">${p['Confidence (%)']}%</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-
-                const marker = L.marker(cityCoordinates[city], { icon })
-                    .bindPopup(popupContent)
+                const marker = L.marker(cityCoordinates[city], { icon, riseOnHover: true })
+                    .bindPopup(buildPopupHtml(city, items), { closeButton: true, autoPan: true, maxWidth: 340 })
                     .addTo(map);
+
+                // Stash the icon element so we can toggle .selected class
+                marker.on('add', () => { marker._iconEl = marker.getElement()?.querySelector('.map-pin'); });
+                if (marker.getElement()) marker._iconEl = marker.getElement().querySelector('.map-pin');
+
+                marker.on('click', () => {
+                    selectedCity = city;
+                    Object.values(cityMarkers).forEach(m => m._iconEl?.classList.remove('selected'));
+                    marker._iconEl?.classList.add('selected');
+                });
+
+                cityMarkers[city] = marker;
                 mapMarkers.push(marker);
+                bounds.push(cityCoordinates[city]);
             });
+
+            // Auto-fit map to the data (with padding) only on the first render or after view switch
+            if (bounds.length > 0) {
+                const isFirstFit = !window.mapFittedOnce;
+                if (isFirstFit || !window.mapUserHasInteracted) {
+                    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 9, animate: true, duration: 0.6 });
+                    window.mapFittedOnce = true;
+                }
+            }
+
+            // Restore selection visual if we have one
+            if (selectedCity && cityMarkers[selectedCity]) {
+                setTimeout(() => cityMarkers[selectedCity]._iconEl?.classList.add('selected'), 50);
+            }
         }
 
         function toggleFilter(quality) {
@@ -5163,6 +5780,15 @@
             const p = allProjects[idx];
             if (!p) return;
             selectedProject = p;
+
+            // Sync the map: highlight the marker and (if in split view with map visible) pan to it
+            if (map && currentView !== 'list-only') {
+                selectCityMarker(p.City, { pan: true, zoom: 10 });
+            } else if (cityMarkers[p.City]) {
+                // Just highlight, don't pan (map isn't visible)
+                cityMarkers[p.City]._iconEl?.classList.add('selected');
+                selectedCity = p.City;
+            }
 
             document.getElementById('modal-title').textContent = p.Name;
             document.getElementById('modal-city').textContent = p.City;
