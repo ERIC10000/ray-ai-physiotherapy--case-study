@@ -1,9 +1,14 @@
 """
-Vercel serverless function — validates Azure OpenAI credentials with a tiny ping call.
+Vercel serverless function — validates LLM provider credentials.
+Supports: azure, anthropic, gemini, openai.
 """
 from http.server import BaseHTTPRequestHandler
 import json
-import time
+import sys
+import os
+
+# Make qualification module importable from the Vercel function bundle
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 
 class handler(BaseHTTPRequestHandler):
@@ -31,34 +36,27 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             return self._send_json(400, {'ok': False, 'error': f'Invalid JSON: {e}'})
 
-        endpoint = (body.get('endpoint') or '').strip()
-        api_key = (body.get('api_key') or '').strip()
-        deployment = (body.get('deployment') or '').strip()
-        api_version = (body.get('api_version') or '2024-08-01-preview').strip()
+        provider = (body.get('provider') or '').strip().lower()
+        credentials = body.get('credentials') or {}
 
-        if not endpoint or not api_key or not deployment:
-            return self._send_json(400, {'ok': False, 'error': 'Missing endpoint, api_key, or deployment'})
+        # Backward-compat: Azure shape at top level
+        if not provider and body.get('endpoint') and body.get('api_key') and body.get('deployment'):
+            provider = 'azure'
+            credentials = {
+                'endpoint': body.get('endpoint'),
+                'api_key': body.get('api_key'),
+                'deployment': body.get('deployment'),
+                'api_version': body.get('api_version', '2024-08-01-preview'),
+            }
+
+        if not provider:
+            return self._send_json(400, {'ok': False, 'error': 'Missing provider (azure, anthropic, gemini, openai)'})
 
         try:
-            from openai import AzureOpenAI
-            client = AzureOpenAI(
-                api_key=api_key,
-                api_version=api_version,
-                azure_endpoint=endpoint.rstrip('/'),
-            )
-            t0 = time.time()
-            response = client.chat.completions.create(
-                model=deployment,
-                messages=[{'role': 'user', 'content': 'ping'}],
-                max_tokens=5,
-            )
-            latency = int((time.time() - t0) * 1000)
-            sample = (response.choices[0].message.content or '')[:30]
-            return self._send_json(200, {
-                'ok': True,
-                'latency_ms': latency,
-                'model': deployment,
-                'sample_response': sample,
-            })
+            from qualification.providers import dispatch_validate
+            result = dispatch_validate(provider, credentials)
         except Exception as e:
-            return self._send_json(401, {'ok': False, 'error': f'{type(e).__name__}: {e}'})
+            return self._send_json(500, {'ok': False, 'error': f'Server error: {type(e).__name__}: {e}'})
+
+        status = 200 if result.get('ok') else 401
+        return self._send_json(status, result)

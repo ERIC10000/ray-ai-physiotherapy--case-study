@@ -74,66 +74,59 @@ def get_leads():
 
 @app.route('/api/validate', methods=['POST'])
 def validate_credentials():
-    """Make a small test call to verify Azure OpenAI credentials."""
-    from qualification.azure_qualifier import validate_azure_credentials
+    """Test call to verify LLM provider credentials. Body: { provider, credentials }."""
+    from qualification.providers import dispatch_validate
 
     body = request.get_json(silent=True) or {}
-    endpoint = (body.get('endpoint') or '').strip()
-    api_key = (body.get('api_key') or '').strip()
-    deployment = (body.get('deployment') or '').strip()
-    api_version = (body.get('api_version') or '2024-08-01-preview').strip()
+    provider = (body.get('provider') or '').strip().lower()
+    credentials = body.get('credentials') or {}
 
-    if not endpoint or not api_key or not deployment:
-        return jsonify({'ok': False, 'error': 'Missing endpoint, api_key, or deployment'}), 400
+    # Backward-compat: if request has Azure shape at the top level, treat as Azure
+    if not provider and body.get('endpoint') and body.get('api_key') and body.get('deployment'):
+        provider = 'azure'
+        credentials = {
+            'endpoint': body.get('endpoint'),
+            'api_key': body.get('api_key'),
+            'deployment': body.get('deployment'),
+            'api_version': body.get('api_version', '2024-08-01-preview'),
+        }
 
-    result = validate_azure_credentials(endpoint, api_key, deployment, api_version)
+    if not provider:
+        return jsonify({'ok': False, 'error': 'Missing provider (azure, anthropic, gemini, openai)'}), 400
+
+    result = dispatch_validate(provider, credentials)
     status = 200 if result.get('ok') else 401
     return jsonify(result), status
 
 
 @app.route('/api/qualify', methods=['POST'])
 def qualify():
-    """
-    Live qualification via Azure OpenAI.
-    Body: { credentials: {...}, project: {name, city, source, description, url} }
-    Returns: { qualification: {...}, meta: { latency_ms, tokens, raw_response } }
-    """
-    from qualification.azure_qualifier import qualify_project_azure
+    """Live qualification via configured LLM provider. Body: { provider, credentials, project }."""
+    from qualification.providers import dispatch_qualify
 
     body = request.get_json(silent=True) or {}
-    creds = body.get('credentials') or {}
+    provider = (body.get('provider') or '').strip().lower()
+    credentials = body.get('credentials') or {}
     project = body.get('project') or {}
 
-    endpoint = (creds.get('endpoint') or '').strip()
-    api_key = (creds.get('api_key') or '').strip()
-    deployment = (creds.get('deployment') or '').strip()
-    api_version = (creds.get('api_version') or '2024-08-01-preview').strip()
+    # Backward-compat: Azure-shaped creds
+    if not provider and credentials.get('endpoint') and credentials.get('deployment'):
+        provider = 'azure'
 
-    if not endpoint or not api_key or not deployment:
-        return jsonify({'error': 'Missing Azure credentials (endpoint, api_key, deployment)'}), 400
+    if not provider:
+        return jsonify({'error': 'Missing provider (azure, anthropic, gemini, openai)'}), 400
 
     required = ['name', 'city', 'source', 'description', 'url']
     missing = [k for k in required if not project.get(k)]
     if missing:
         return jsonify({'error': f'Project missing fields: {", ".join(missing)}'}), 400
 
-    qualification, meta = qualify_project_azure(
-        name=project['name'],
-        city=project['city'],
-        source=project['source'],
-        description=project['description'],
-        url=project['url'],
-        endpoint=endpoint,
-        api_key=api_key,
-        deployment=deployment,
-        api_version=api_version,
-    )
-
+    qualification, meta = dispatch_qualify(provider, credentials, project)
     if qualification is None:
         return jsonify({'error': meta.get('error', 'Qualification failed'), 'meta': meta}), 502
 
     return jsonify({
-        'qualification': qualification.to_dict(),
+        'qualification': qualification,
         'meta': {k: v for k, v in meta.items() if k != 'raw_response'},
         'raw_response': meta.get('raw_response'),
     })
