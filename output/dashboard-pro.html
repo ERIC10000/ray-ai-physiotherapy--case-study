@@ -449,6 +449,229 @@
             color: var(--danger-dark);
         }
 
+        /* ===== PROVIDER CARD (Azure OpenAI) ===== */
+        .provider-card {
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: 16px;
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .provider-card.configured {
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .provider-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .provider-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,120,212,0.25);
+        }
+
+        .provider-logo svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .provider-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .provider-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.01em;
+        }
+
+        .provider-model {
+            font-size: 11.5px;
+            color: var(--gray-500);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .provider-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .provider-status.testing {
+            color: var(--primary);
+        }
+
+        .provider-status.testing .status-dot {
+            background: var(--primary);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .provider-status.connected {
+            color: var(--success-dark);
+            background: var(--success-bg);
+            border-color: #a7f3d0;
+        }
+
+        .provider-status.connected .status-dot {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .provider-status.failed {
+            color: var(--danger-dark);
+            background: var(--danger-bg);
+            border-color: #fecaca;
+        }
+
+        .provider-status.failed .status-dot {
+            background: var(--danger);
+        }
+
+        .provider-body {
+            padding: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .test-btn {
+            margin-top: 4px;
+        }
+
+        .test-btn:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .test-btn:not(:disabled):hover {
+            background: var(--primary-dark);
+        }
+
+        .test-result {
+            margin-top: 14px;
+            display: none;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        .test-result.show {
+            display: block;
+            animation: slideIn 0.25s;
+        }
+
+        .test-result.success {
+            background: var(--success-bg);
+            border-left: 3px solid var(--success);
+            color: var(--success-dark);
+        }
+
+        .test-result.error {
+            background: var(--danger-bg);
+            border-left: 3px solid var(--danger);
+            color: var(--danger-dark);
+        }
+
+        .test-result-header {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .test-result-header svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .test-result-detail {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 11px;
+            background: rgba(255,255,255,0.5);
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+
+        .optional-section {
+            margin-top: 8px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .optional-section summary {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            background: var(--gray-50);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .optional-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .optional-section summary::after {
+            content: '+';
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--gray-400);
+            transition: transform 0.2s;
+        }
+
+        .optional-section[open] summary::after {
+            content: '−';
+            transform: rotate(0deg);
+        }
+
+        .optional-section .form-group {
+            margin: 16px;
+        }
+
+        .optional-section .form-group:last-child {
+            margin-bottom: 16px;
+        }
+
         .checkbox-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -2461,6 +2684,53 @@
                 height: 10px;
             }
 
+            /* Provider card on mobile */
+            .provider-header {
+                padding: 14px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .provider-logo {
+                width: 36px;
+                height: 36px;
+            }
+
+            .provider-name {
+                font-size: 14px;
+            }
+
+            .provider-model {
+                font-size: 11px;
+            }
+
+            .provider-status {
+                font-size: 10px;
+                padding: 4px 8px;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 4px;
+            }
+
+            .provider-body {
+                padding: 16px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .test-btn {
+                width: 100% !important;
+            }
+
+            .test-result {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+
             /* Slider on mobile */
             .slider-wrap {
                 flex-direction: column-reverse;
@@ -2852,41 +3122,86 @@
                 <!-- Step 1: API Keys -->
                 <div class="wizard-body" id="wizard-step-1">
                     <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Connect your AI provider</h3>
-                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Paste your Anthropic API key to power live AI qualification. Leave blank to use demo mode with realistic mock data.</p>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Configure Azure OpenAI to enable live qualification. Leave blank to use demo mode with realistic mock data.</p>
 
-                    <div class="form-group">
-                        <label class="form-label">Anthropic API Key <span class="optional">(for live mode)</span></label>
-                        <div class="input-wrap">
-                            <input type="password" class="form-input" id="anthropic-key" placeholder="sk-ant-api03-..." autocomplete="off">
-                            <span class="input-status" id="anthropic-status"></span>
-                            <button class="input-icon" type="button" onclick="togglePassword('anthropic-key')" title="Show/hide">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            </button>
+                    <div class="provider-card">
+                        <div class="provider-header">
+                            <div class="provider-logo">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.2 0L0 19.2h11.2L22.4 0H11.2zm0 19.2L8.8 24h13.6l-2.4-4.8H11.2z"/></svg>
+                            </div>
+                            <div class="provider-info">
+                                <div class="provider-name">Azure OpenAI</div>
+                                <div class="provider-model">GPT-4o-mini · GPT-4o · GPT-4-Turbo</div>
+                            </div>
+                            <div class="provider-status" id="provider-status">
+                                <span class="status-dot"></span>
+                                <span id="provider-status-text">Not configured</span>
+                            </div>
                         </div>
-                        <div class="form-hint">Get your key from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>. Keys are stored locally in your browser only.</div>
+
+                        <div class="provider-body">
+                            <div class="form-group">
+                                <label class="form-label">Endpoint URL</label>
+                                <input type="text" class="form-input" id="azure-endpoint" placeholder="https://your-resource.openai.azure.com" autocomplete="off" oninput="onAzureFieldChange()">
+                                <div class="form-hint">From Azure Portal → your OpenAI resource → Keys and Endpoint</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">API Key</label>
+                                <div class="input-wrap">
+                                    <input type="password" class="form-input" id="azure-key" placeholder="Paste key 1 or key 2" autocomplete="off" oninput="onAzureFieldChange()">
+                                    <button class="input-icon" type="button" onclick="togglePassword('azure-key')" title="Show/hide">
+                                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Deployment Name</label>
+                                    <input type="text" class="form-input" id="azure-deployment" placeholder="gpt-4o-mini" autocomplete="off" oninput="onAzureFieldChange()">
+                                    <div class="form-hint">The name you gave the deployment, not the model</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">API Version</label>
+                                    <input type="text" class="form-input" id="azure-api-version" value="2024-08-01-preview" autocomplete="off" oninput="onAzureFieldChange()">
+                                    <div class="form-hint">Defaults to a recent preview</div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-secondary test-btn" id="btn-test-azure" onclick="testAzureConnection()" disabled style="width: auto;">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                Test connection
+                            </button>
+
+                            <div class="test-result" id="azure-test-result"></div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Google Search API Key <span class="optional">(optional)</span></label>
-                        <div class="input-wrap">
-                            <input type="password" class="form-input" id="google-key" placeholder="AIza..." autocomplete="off">
-                            <button class="input-icon" type="button" onclick="togglePassword('google-key')">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            </button>
+                    <details class="optional-section">
+                        <summary>Optional: additional data sources</summary>
+                        <div class="form-group">
+                            <label class="form-label">Google Search API Key <span class="optional">(optional)</span></label>
+                            <div class="input-wrap">
+                                <input type="password" class="form-input" id="google-key" placeholder="AIza..." autocomplete="off">
+                                <button class="input-icon" type="button" onclick="togglePassword('google-key')">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                            <div class="form-hint">Enables enhanced news searches.</div>
                         </div>
-                        <div class="form-hint">Enables enhanced news searches. <a href="https://developers.google.com/custom-search/v1/overview" target="_blank">Get key</a>.</div>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">FIS-Broker Token <span class="optional">(optional, for Berlin geoportal)</span></label>
-                        <div class="input-wrap">
-                            <input type="password" class="form-input" id="fis-key" placeholder="Berlin geoportal access token" autocomplete="off">
-                            <button class="input-icon" type="button" onclick="togglePassword('fis-key')">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            </button>
+                        <div class="form-group">
+                            <label class="form-label">FIS-Broker Token <span class="optional">(optional, for Berlin)</span></label>
+                            <div class="input-wrap">
+                                <input type="password" class="form-input" id="fis-key" placeholder="Berlin geoportal access token" autocomplete="off">
+                                <button class="input-icon" type="button" onclick="togglePassword('fis-key')">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                            <div class="form-hint">Unlocks real Berlin construction-permit data.</div>
                         </div>
-                        <div class="form-hint">Unlocks real Berlin construction-permit data from FIS-Broker.</div>
-                    </div>
+                    </details>
                 </div>
 
                 <!-- Step 2: Data Sources -->
@@ -3508,10 +3823,18 @@
         }
 
         function saveConfig() {
+            const azure = {
+                endpoint: document.getElementById('azure-endpoint').value.trim(),
+                api_key: document.getElementById('azure-key').value.trim(),
+                deployment: document.getElementById('azure-deployment').value.trim(),
+                api_version: document.getElementById('azure-api-version').value.trim() || '2024-08-01-preview',
+            };
             const config = {
-                anthropic: document.getElementById('anthropic-key').value.trim(),
-                google: document.getElementById('google-key').value.trim(),
-                fis: document.getElementById('fis-key').value.trim(),
+                provider: 'azure-openai',
+                azure,
+                validated: window.azureValidated === true,
+                google: document.getElementById('google-key')?.value?.trim() || '',
+                fis: document.getElementById('fis-key')?.value?.trim() || '',
                 sources: {
                     news: document.getElementById('src-news').checked,
                     press: document.getElementById('src-press').checked,
@@ -3524,13 +3847,131 @@
             };
             sessionStorage.setItem('radarConfig', JSON.stringify(config));
 
-            if (config.anthropic) {
+            const hasAzureCreds = azure.endpoint && azure.api_key && azure.deployment;
+            if (hasAzureCreds && config.validated) {
                 document.getElementById('api-status').classList.remove('demo');
                 document.getElementById('api-status').classList.add('connected');
-                document.getElementById('api-status-text').textContent = 'Live Mode';
-                showToast('success', 'API keys saved — live mode active');
+                document.getElementById('api-status-text').textContent = 'Live · ' + azure.deployment;
+                showToast('success', `Live mode active (${azure.deployment})`);
+            } else if (hasAzureCreds) {
+                document.getElementById('api-status').classList.remove('connected');
+                document.getElementById('api-status').classList.add('demo');
+                document.getElementById('api-status-text').textContent = 'Credentials not tested';
+                showToast('info', 'Tip: Test connection before continuing to verify credentials work');
             } else {
-                showToast('info', 'No API key — using demo mode');
+                showToast('info', 'No credentials — running in demo mode');
+            }
+        }
+
+        // ===== AZURE OPENAI INTEGRATION =====
+        function onAzureFieldChange() {
+            const endpoint = document.getElementById('azure-endpoint').value.trim();
+            const apiKey = document.getElementById('azure-key').value.trim();
+            const deployment = document.getElementById('azure-deployment').value.trim();
+            const allFilled = endpoint && apiKey && deployment;
+
+            const testBtn = document.getElementById('btn-test-azure');
+            testBtn.disabled = !allFilled;
+
+            // Reset validation state when fields change
+            if (window.azureValidated) {
+                window.azureValidated = false;
+                const statusEl = document.getElementById('provider-status');
+                statusEl.className = 'provider-status';
+                document.getElementById('provider-status-text').textContent = 'Not configured';
+                document.getElementById('azure-test-result').className = 'test-result';
+            }
+        }
+
+        async function testAzureConnection() {
+            const endpoint = document.getElementById('azure-endpoint').value.trim();
+            const apiKey = document.getElementById('azure-key').value.trim();
+            const deployment = document.getElementById('azure-deployment').value.trim();
+            const apiVersion = document.getElementById('azure-api-version').value.trim() || '2024-08-01-preview';
+
+            const statusEl = document.getElementById('provider-status');
+            const statusText = document.getElementById('provider-status-text');
+            const resultEl = document.getElementById('azure-test-result');
+            const btn = document.getElementById('btn-test-azure');
+
+            // Set testing state
+            statusEl.className = 'provider-status testing';
+            statusText.textContent = 'Testing...';
+            btn.disabled = true;
+            btn.innerHTML = `<svg style="animation: spin 1s linear infinite;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Testing...`;
+            resultEl.className = 'test-result';
+
+            try {
+                const response = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, api_key: apiKey, deployment, api_version: apiVersion })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    statusEl.className = 'provider-status connected';
+                    statusText.textContent = 'Connected';
+                    document.querySelector('.provider-card').classList.add('configured');
+                    resultEl.className = 'test-result success show';
+                    resultEl.innerHTML = `
+                        <div class="test-result-header">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            Connection successful
+                        </div>
+                        <div>Deployment <strong>${escapeHtml(data.model || deployment)}</strong> responded in <strong>${data.latency_ms}ms</strong></div>
+                        ${data.sample_response ? `<div class="test-result-detail">Response: "${escapeHtml(data.sample_response)}"</div>` : ''}
+                    `;
+                    window.azureValidated = true;
+                    document.getElementById('api-status').classList.remove('demo');
+                    document.getElementById('api-status').classList.add('connected');
+                    document.getElementById('api-status-text').textContent = 'Live · ' + deployment;
+                    showToast('success', `Azure OpenAI connected (${data.latency_ms}ms)`);
+                } else {
+                    throw new Error(data.error || 'Validation failed');
+                }
+            } catch (err) {
+                statusEl.className = 'provider-status failed';
+                statusText.textContent = 'Failed';
+                resultEl.className = 'test-result error show';
+                resultEl.innerHTML = `
+                    <div class="test-result-header">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Connection failed
+                    </div>
+                    <div class="test-result-detail">${escapeHtml(err.message || String(err))}</div>
+                    <div style="margin-top:6px;font-size:11px;opacity:0.85;">Check endpoint URL, deployment name, and API version. Make sure the deployment is active in Azure.</div>
+                `;
+                window.azureValidated = false;
+                showToast('error', 'Connection failed — see details');
+            } finally {
+                btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Test connection`;
+                btn.disabled = false;
+            }
+        }
+
+        async function realQualifyOne(project) {
+            const saved = sessionStorage.getItem('radarConfig');
+            if (!saved) return null;
+            try {
+                const config = JSON.parse(saved);
+                if (!config.azure?.endpoint || !config.azure?.api_key || !config.azure?.deployment) return null;
+                const response = await fetch('/api/qualify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credentials: config.azure,
+                        project: project
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    return { error: data.error || 'Qualification failed' };
+                }
+                return data;
+            } catch (e) {
+                return { error: e.message };
             }
         }
 
@@ -3665,25 +4106,27 @@
             return `~$${Math.round(usd)}`;
         }
 
-        // Validate Anthropic key as user types
+        // Initialize Azure fields on load (restore from sessionStorage if present)
         document.addEventListener('DOMContentLoaded', () => {
-            const anthropicInput = document.getElementById('anthropic-key');
-            if (anthropicInput) {
-                anthropicInput.addEventListener('input', (e) => {
-                    const val = e.target.value.trim();
-                    const status = document.getElementById('anthropic-status');
-                    if (!val) {
-                        status.className = 'input-status';
-                        status.textContent = '';
-                    } else if (val.startsWith('sk-ant-') && val.length > 30) {
-                        status.className = 'input-status valid';
-                        status.textContent = 'Valid format';
-                    } else {
-                        status.className = 'input-status invalid';
-                        status.textContent = 'Check format';
-                    }
-                });
-            }
+            const saved = sessionStorage.getItem('radarConfig');
+            if (!saved) return;
+            try {
+                const config = JSON.parse(saved);
+                if (config.azure) {
+                    if (config.azure.endpoint) document.getElementById('azure-endpoint').value = config.azure.endpoint;
+                    if (config.azure.api_key) document.getElementById('azure-key').value = config.azure.api_key;
+                    if (config.azure.deployment) document.getElementById('azure-deployment').value = config.azure.deployment;
+                    if (config.azure.api_version) document.getElementById('azure-api-version').value = config.azure.api_version;
+                    onAzureFieldChange();
+                }
+                if (config.validated && config.azure?.endpoint) {
+                    window.azureValidated = true;
+                    document.querySelector('.provider-card')?.classList.add('configured');
+                    const statusEl = document.getElementById('provider-status');
+                    statusEl.className = 'provider-status connected';
+                    document.getElementById('provider-status-text').textContent = 'Connected';
+                }
+            } catch (e) {}
         });
 
         // ===== COLLECTION PIPELINE =====
@@ -3756,9 +4199,7 @@
                     { type: 'warning', msg: `Removed ${duplicates} duplicates` },
                     { type: 'success', msg: `${uniqueProjects} unique projects identified` }
                 ]},
-                { id: 'qualify', durationSec: Math.ceil((finalCount * 3) / 5), count: `${finalCount}/${finalCount}`, logs: [
-                    { type: 'info', msg: 'POST https://api.anthropic.com/v1/messages' },
-                    { type: 'info', msg: 'Model: claude-haiku-4-5-20251001 (5 concurrent calls)' },
+                { id: 'qualify', durationSec: Math.ceil((finalCount * 3) / 5), count: `${finalCount}/${finalCount}`, realCall: true, logs: [
                     ...sampleQualLogs
                 ]},
                 { id: 'geocode', durationSec: Math.min(15, Math.round(est.regions * 2)), count: `${est.regions * 2} cities`, logs: [
@@ -3775,6 +4216,10 @@
             const totalDurationSec = stages.reduce((s, st) => s + st.durationSec, 0);
             let elapsedSec = 0;
 
+            // Check if live mode (validated Azure creds)
+            const savedCfg = (() => { try { return JSON.parse(sessionStorage.getItem('radarConfig') || '{}'); } catch { return {}; } })();
+            const liveMode = savedCfg.validated && savedCfg.azure?.endpoint && savedCfg.azure?.api_key && savedCfg.azure?.deployment;
+
             for (const stage of stages) {
                 const el = document.querySelector(`[data-stage="${stage.id}"]`);
                 el.classList.add('active');
@@ -3786,6 +4231,52 @@
                 // Convert seconds to ms with the animation speed factor
                 const stageMs = stage.durationSec * 1000 * animSpeedFactor;
                 const perLogMs = stageMs / stage.logs.length;
+
+                // ===== LIVE API CALL for qualify stage =====
+                if (stage.realCall && liveMode) {
+                    addLog('info', `POST ${savedCfg.azure.endpoint}/openai/deployments/${savedCfg.azure.deployment}/chat/completions`);
+                    addLog('info', `Provider: Azure OpenAI · Deployment: ${savedCfg.azure.deployment} · API ${savedCfg.azure.api_version}`);
+                    addLog('info', `→ Making 1 real qualification call to verify live integration (remaining ${finalCount - 1} simulated for demo)`);
+
+                    // Pick first project from CSV-backed demo data for the real call
+                    let demoProject = null;
+                    try {
+                        const r = await fetch('/api/leads');
+                        const d = await r.json();
+                        if (d.leads && d.leads.length) {
+                            const p = d.leads[0];
+                            demoProject = {
+                                name: p.Name,
+                                city: p.City,
+                                source: p.Source,
+                                description: p.Description,
+                                url: p.URL
+                            };
+                        }
+                    } catch (_) {}
+
+                    if (demoProject) {
+                        const result = await realQualifyOne(demoProject);
+                        if (result && !result.error) {
+                            const q = result.qualification;
+                            const m = result.meta || {};
+                            addLog('success', `✓ Real API response received in ${m.latency_ms || '?'}ms`);
+                            if (m.tokens_in != null) {
+                                addLog('info', `Tokens: ${m.tokens_in} in / ${m.tokens_out} out`);
+                            }
+                            addLog('success', `[REAL] ${demoProject.name.substring(0, 50)} → ${q['Lead Quality'].toUpperCase()} (${q['Confidence (%)']}%)`);
+                            addLog('info', `Reasoning: ${(q.Reasoning || '').substring(0, 100)}${q.Reasoning && q.Reasoning.length > 100 ? '...' : ''}`);
+                        } else {
+                            addLog('error', `✗ Real call failed: ${result?.error || 'unknown error'}`);
+                            addLog('warning', 'Falling back to simulated qualifications for remaining projects');
+                        }
+                    } else {
+                        addLog('warning', 'Could not load demo project for real call');
+                    }
+                } else if (stage.realCall && !liveMode) {
+                    addLog('warning', '[Simulated] No validated credentials — all qualifications mocked. Add Azure key + test connection for real calls.');
+                    addLog('info', `Endpoint would be: POST https://<your>.openai.azure.com/openai/deployments/<name>/chat/completions`);
+                }
 
                 for (let i = 0; i < stage.logs.length; i++) {
                     await sleep(perLogMs);
@@ -4183,18 +4674,19 @@
             }, { passive: true });
         }
 
-        // If config exists, restore it
-        const saved = sessionStorage.getItem('radarConfig');
-        if (saved) {
+        // If config exists, restore live-mode pill
+        (function restoreApiStatus() {
+            const saved = sessionStorage.getItem('radarConfig');
+            if (!saved) return;
             try {
                 const config = JSON.parse(saved);
-                if (config.anthropic) {
+                if (config.validated && config.azure?.deployment) {
                     document.getElementById('api-status').classList.remove('demo');
                     document.getElementById('api-status').classList.add('connected');
-                    document.getElementById('api-status-text').textContent = 'Live Mode';
+                    document.getElementById('api-status-text').textContent = 'Live · ' + config.azure.deployment;
                 }
             } catch (e) {}
-        }
+        })();
 
         // Set initial mobile-appropriate view
         if (isMobile()) {
