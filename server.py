@@ -141,4 +141,6 @@ if __name__ == '__main__':
     print("\nPress Ctrl+C to stop")
     print("=" * 60 + "\n")
 
-    app.run(debug=True, port=5000)
+    # Use 'stat' reloader instead of 'watchdog' to avoid restart loops
+    # triggered by installed-package activity in stdlib
+    app.run(debug=True, port=5000, reloader_type='stat')
