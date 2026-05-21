@@ -2655,6 +2655,12 @@
             height: 16px;
         }
 
+        /* Smooth crossfade between tile layers when switching map style */
+        .leaflet-tile-container,
+        .leaflet-layer {
+            transition: opacity 0.25s ease;
+        }
+
         /* Leaflet control containers (override defaults) */
         .leaflet-control {
             font-family: 'Inter', sans-serif !important;
@@ -5566,17 +5572,29 @@
         function initMap() {
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([51.3, 10.5], 6);
 
-            // Three tile-layer choices
+            // Three tile-layer choices — all tuned for fast loading
+            const tileOpts = {
+                crossOrigin: true,        // enables HTTP cache reuse between sessions
+                keepBuffer: 4,            // load 4 tiles beyond viewport (default 2) — more cache, faster pan/zoom
+                updateWhenIdle: false,    // load tiles continuously, not just when motion stops
+                updateWhenZooming: false, // don't request mid-animation tiles that will be discarded
+            };
+
             tileLayers.light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© OpenStreetMap · © CartoDB', maxZoom: 19
+                ...tileOpts, attribution: '© OpenStreetMap · © CartoDB', maxZoom: 19, subdomains: 'abcd',
             });
             tileLayers.streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors', maxZoom: 19
+                ...tileOpts, attribution: '© OpenStreetMap contributors', maxZoom: 19,
             });
             tileLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles © Esri', maxZoom: 19
+                ...tileOpts,
+                attribution: 'Tiles © Esri',
+                maxZoom: 19,
+                maxNativeZoom: 18,        // don't request z=19 (often missing for rural Germany → 404 latency)
+                keepBuffer: 6,            // satellite tiles are heavier; keep more cached
             });
             tileLayers.light.addTo(map);
+            tileLayers.light.setZIndex(1);
 
             // Custom Leaflet attribution (compact)
             L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
@@ -5609,6 +5627,8 @@
                 return div;
             };
             styleControl.addTo(map);
+            // Wire up hover-preload after buttons exist in DOM
+            setTimeout(setupTilePrewarm, 0);
 
             // Fullscreen toggle (top-right, below style toggle)
             const fsControl = L.control({ position: 'topright' });
@@ -5648,11 +5668,38 @@
 
         function setMapStyle(style) {
             if (!tileLayers[style] || style === currentMapStyle) return;
-            map.removeLayer(tileLayers[currentMapStyle]);
-            tileLayers[style].addTo(map);
+
+            // Add the new layer if it's not on the map yet — keeps tile cache after switching away
+            if (!map.hasLayer(tileLayers[style])) {
+                tileLayers[style].addTo(map);
+            }
+
+            // Cross-fade: lift the new layer, lower the old one. Both stay on the map so tiles stay cached.
+            tileLayers[style].setZIndex(2);
+            tileLayers[style].setOpacity(1);
+            tileLayers[currentMapStyle].setZIndex(1);
+            tileLayers[currentMapStyle].setOpacity(0);
+
             currentMapStyle = style;
             document.querySelectorAll('.mapstyle-btn').forEach(b => {
                 b.classList.toggle('active', b.dataset.style === style);
+            });
+        }
+
+        // Pre-warm tiles on hover/touchstart — by the time the user clicks, tiles are already downloading
+        function setupTilePrewarm() {
+            const buttons = document.querySelectorAll('.mapstyle-btn');
+            const warmup = (style) => {
+                if (style === currentMapStyle) return;
+                const layer = tileLayers[style];
+                if (!layer || map.hasLayer(layer)) return;
+                layer.setOpacity(0);    // invisible while loading
+                layer.setZIndex(0);     // below the active layer
+                layer.addTo(map);
+            };
+            buttons.forEach(btn => {
+                btn.addEventListener('mouseenter', () => warmup(btn.dataset.style), { passive: true });
+                btn.addEventListener('touchstart', () => warmup(btn.dataset.style), { passive: true });
             });
         }
 
