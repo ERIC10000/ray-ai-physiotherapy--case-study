@@ -1348,6 +1348,111 @@
             gap: 6px;
         }
 
+        /* ===== LIVE RESULTS BANNER ===== */
+        .live-banner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 50%, #fafffe 100%);
+            border-bottom: 1px solid #a7f3d0;
+            position: relative;
+            animation: slideInDown 0.3s ease;
+        }
+
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .live-banner-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .live-banner-icon .status-dot {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .live-banner-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .live-banner-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--success-dark);
+            letter-spacing: -0.005em;
+        }
+
+        .live-banner-meta {
+            font-size: 11.5px;
+            color: var(--gray-600);
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .live-banner-meta strong {
+            color: var(--gray-800);
+            font-weight: 600;
+        }
+
+        .live-banner-reset {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .live-banner-reset:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+            color: var(--gray-900);
+        }
+
+        .live-banner-reset svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .live-banner {
+                padding: 10px 12px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .live-banner-title { font-size: 12px; }
+            .live-banner-meta { font-size: 10.5px; line-height: 1.4; }
+            .live-banner-reset {
+                margin-left: auto;
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+            .live-banner-reset span { display: none; }
+        }
+
         /* ===== EXPORT DROPDOWN ===== */
         .export-wrap {
             position: relative;
@@ -4947,6 +5052,51 @@
             }
         });
 
+        // ===== LIVE-RESULTS BANNER =====
+        function showLiveBanner(meta) {
+            if (!meta) return;
+            let banner = document.getElementById('live-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'live-banner';
+                banner.className = 'live-banner';
+                const statsBar = document.querySelector('.stats-bar');
+                statsBar?.insertAdjacentElement('afterend', banner);
+            }
+            const when = new Date(meta.timestamp || Date.now());
+            const ago = Math.round((Date.now() - when.getTime()) / 1000);
+            const agoLabel = ago < 60 ? `${ago}s ago` : ago < 3600 ? `${Math.round(ago/60)}m ago` : `${Math.round(ago/3600)}h ago`;
+            banner.innerHTML = `
+                <div class="live-banner-icon"><div class="status-dot"></div></div>
+                <div class="live-banner-content">
+                    <div class="live-banner-title">Live results from ${escapeHtml(meta.providerLabel || meta.provider)}</div>
+                    <div class="live-banner-meta">
+                        Model: <strong>${escapeHtml(meta.model || '')}</strong> ·
+                        ${meta.tokensIn || 0} in / ${meta.tokensOut || 0} out tokens ·
+                        ${meta.avgLatencyMs || 0}ms avg ·
+                        ${agoLabel}
+                    </div>
+                </div>
+                <button class="live-banner-reset" onclick="resetToDemo()" title="Discard live results and show demo data">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Reset to demo
+                </button>
+            `;
+        }
+
+        function hideLiveBanner() {
+            document.getElementById('live-banner')?.remove();
+        }
+
+        function resetToDemo() {
+            sessionStorage.removeItem('liveLeads');
+            window.liveLeads = null;
+            window.liveLeadsMeta = null;
+            hideLiveBanner();
+            showToast('info', 'Live results cleared — showing demo data');
+            loadProjects();
+        }
+
         async function realQualifyOne(project) {
             const saved = sessionStorage.getItem('radarConfig');
             if (!saved) return null;
@@ -5253,7 +5403,7 @@
                 const stageMs = stage.durationSec * 1000 * animSpeedFactor;
                 const perLogMs = stageMs / stage.logs.length;
 
-                // ===== LIVE API CALL for qualify stage =====
+                // ===== LIVE QUALIFICATION: real batch call for all projects =====
                 if (stage.realCall && liveMode) {
                     const providerLabel = {
                         azure: 'Azure OpenAI',
@@ -5262,6 +5412,7 @@
                         openai: 'OpenAI',
                     }[liveProvider] || liveProvider;
                     const modelLabel = savedCfg.credentials.deployment || savedCfg.credentials.model || '';
+
                     if (liveProvider === 'azure') {
                         addLog('info', `POST ${savedCfg.credentials.endpoint}/openai/deployments/${savedCfg.credentials.deployment}/chat/completions`);
                     } else if (liveProvider === 'anthropic') {
@@ -5271,47 +5422,92 @@
                     } else if (liveProvider === 'openai') {
                         addLog('info', `POST https://api.openai.com/v1/chat/completions`);
                     }
-                    addLog('info', `Provider: ${providerLabel} · Model: ${modelLabel}`);
-                    addLog('info', `→ Making 1 real qualification call to verify live integration (remaining ${finalCount - 1} simulated for demo)`);
+                    addLog('info', `Provider: ${providerLabel} · Model: ${modelLabel} · 5 concurrent`);
 
-                    // Pick first project from CSV-backed demo data for the real call
-                    let demoProject = null;
+                    // Fetch source descriptions (from demo CSV) and qualify each in real time
+                    let sourceProjects = [];
                     try {
                         const r = await fetch('/api/leads');
                         const d = await r.json();
-                        if (d.leads && d.leads.length) {
-                            const p = d.leads[0];
-                            demoProject = {
-                                name: p.Name,
-                                city: p.City,
-                                source: p.Source,
-                                description: p.Description,
-                                url: p.URL
-                            };
-                        }
-                    } catch (_) {}
-
-                    if (demoProject) {
-                        const result = await realQualifyOne(demoProject);
-                        if (result && !result.error) {
-                            const q = result.qualification;
-                            const m = result.meta || {};
-                            addLog('success', `✓ Real API response received in ${m.latency_ms || '?'}ms`);
-                            if (m.tokens_in != null) {
-                                addLog('info', `Tokens: ${m.tokens_in} in / ${m.tokens_out} out`);
-                            }
-                            addLog('success', `[REAL] ${demoProject.name.substring(0, 50)} → ${q['Lead Quality'].toUpperCase()} (${q['Confidence (%)']}%)`);
-                            addLog('info', `Reasoning: ${(q.Reasoning || '').substring(0, 100)}${q.Reasoning && q.Reasoning.length > 100 ? '...' : ''}`);
-                        } else {
-                            addLog('error', `✗ Real call failed: ${result?.error || 'unknown error'}`);
-                            addLog('warning', 'Falling back to simulated qualifications for remaining projects');
-                        }
-                    } else {
-                        addLog('warning', 'Could not load demo project for real call');
+                        sourceProjects = (d.leads || []).map(p => ({
+                            name: p.Name, city: p.City, source: p.Source,
+                            description: p.Description, url: p.URL,
+                        }));
+                    } catch (e) {
+                        addLog('error', `Could not load source projects: ${e.message}`);
                     }
+
+                    const liveResults = [];
+                    let totalLatency = 0, totalIn = 0, totalOut = 0, errors = 0;
+                    const batchSize = 5;
+
+                    for (let i = 0; i < sourceProjects.length; i += batchSize) {
+                        const batch = sourceProjects.slice(i, i + batchSize);
+                        const batchPromises = batch.map(p => realQualifyOne(p));
+                        const results = await Promise.all(batchPromises);
+
+                        results.forEach((result, idx) => {
+                            const project = batch[idx];
+                            const globalIdx = i + idx + 1;
+                            const total = sourceProjects.length;
+                            const shortName = project.name.length > 45 ? project.name.substring(0, 42) + '...' : project.name;
+
+                            if (result && result.qualification) {
+                                liveResults.push(result.qualification);
+                                const q = result.qualification;
+                                const m = result.meta || {};
+                                addLog('success', `[${globalIdx}/${total}] ${shortName} → ${q['Lead Quality'].toUpperCase()} (${q['Confidence (%)']}%)`);
+                                totalLatency += m.latency_ms || 0;
+                                totalIn += m.tokens_in || 0;
+                                totalOut += m.tokens_out || 0;
+                            } else {
+                                errors++;
+                                addLog('error', `[${globalIdx}/${total}] ${shortName} → Failed: ${result?.error?.substring(0, 80) || 'unknown'}`);
+                            }
+                        });
+
+                        // Progress update after each batch
+                        elapsedSec += (stage.durationSec * batch.length) / sourceProjects.length;
+                        updateProgress(elapsedSec / totalDurationSec * 100, stageEl.textContent, Math.round(elapsedSec));
+                    }
+
+                    // Summary
+                    const high = liveResults.filter(p => p['Lead Quality'] === 'high').length;
+                    const medium = liveResults.filter(p => p['Lead Quality'] === 'medium').length;
+                    const low = liveResults.filter(p => p['Lead Quality'] === 'low').length;
+                    addLog('info', `Total: ${totalIn} input tokens, ${totalOut} output tokens, ${totalLatency}ms aggregate`);
+                    if (errors > 0) addLog('warning', `${errors} qualification${errors === 1 ? '' : 's'} failed`);
+                    addLog('success', `✓ Live qualification complete — ${high} high, ${medium} medium, ${low} low`);
+
+                    // Persist live results so the dashboard renders them instead of demo CSV
+                    window.liveLeads = liveResults;
+                    window.liveLeadsMeta = {
+                        provider: liveProvider,
+                        providerLabel,
+                        model: modelLabel,
+                        timestamp: new Date().toISOString(),
+                        tokensIn: totalIn,
+                        tokensOut: totalOut,
+                        avgLatencyMs: liveResults.length ? Math.round(totalLatency / liveResults.length) : 0,
+                        errors,
+                    };
+                    try {
+                        sessionStorage.setItem('liveLeads', JSON.stringify({
+                            leads: liveResults,
+                            meta: window.liveLeadsMeta,
+                        }));
+                    } catch (e) {
+                        addLog('warning', `Could not cache live leads in sessionStorage: ${e.message}`);
+                    }
+
+                    // Override the stage counter & skip the simulated logs (which are now irrelevant)
+                    el.classList.remove('active');
+                    el.classList.add('done');
+                    el.querySelector('.stage-status').textContent = 'Complete';
+                    el.querySelector('.stage-counter').textContent = `${liveResults.length}/${sourceProjects.length}`;
+                    continue;  // skip the simulated log playback for this stage
                 } else if (stage.realCall && !liveMode) {
-                    addLog('warning', '[Simulated] No validated credentials — all qualifications mocked. Add Azure key + test connection for real calls.');
-                    addLog('info', `Endpoint would be: POST https://<your>.openai.azure.com/openai/deployments/<name>/chat/completions`);
+                    addLog('warning', '[Simulated] No validated credentials — all qualifications mocked. Configure a provider in Setup → API Configuration for real calls.');
                 }
 
                 for (let i = 0; i < stage.logs.length; i++) {
@@ -5490,6 +5686,41 @@
 
         // ===== DATA =====
         async function loadProjects() {
+            // First check if we have live results from a recent pipeline run
+            try {
+                const stored = sessionStorage.getItem('liveLeads');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.leads && parsed.leads.length) {
+                        allProjects = parsed.leads;
+                        window.liveLeadsMeta = parsed.meta;
+
+                        const high = allProjects.filter(p => p['Lead Quality'] === 'high').length;
+                        const medium = allProjects.filter(p => p['Lead Quality'] === 'medium').length;
+                        const low = allProjects.filter(p => p['Lead Quality'] === 'low').length;
+                        document.getElementById('stat-total').textContent = allProjects.length;
+                        document.getElementById('stat-high').textContent = high;
+                        document.getElementById('stat-medium').textContent = medium;
+                        document.getElementById('stat-low').textContent = low;
+                        document.getElementById('count-high').textContent = high;
+                        document.getElementById('count-medium').textContent = medium;
+                        document.getElementById('count-low').textContent = low;
+
+                        showLiveBanner(parsed.meta);
+                        window.mapUserHasInteracted = false;
+                        window.mapFittedOnce = false;
+                        selectedCity = null;
+                        renderProjects();
+                        if (map) renderMap();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not restore live leads', e);
+            }
+
+            // Fall back to demo CSV
+            hideLiveBanner();
             try {
                 // Show a subtle loading hint over the map
                 const mapEl = document.querySelector('.map-panel');
