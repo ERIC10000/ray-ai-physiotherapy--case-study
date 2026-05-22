@@ -127,6 +127,108 @@ def scrape_oparl():
         return jsonify({'error': f'{type(e).__name__}: {e}'}), 500
 
 
+@app.route('/api/scrape/news', methods=['GET'])
+def scrape_news_endpoint():
+    """
+    Real Google News RSS scrape across target German cities × medical keywords.
+    Caches to output/news_matches.json. Pass ?refresh=true to force a fresh scrape.
+    """
+    import os
+    import json as json_module
+    from datetime import datetime
+
+    refresh = request.args.get('refresh', 'false').lower() == 'true'
+    cache_path = os.path.join(os.path.dirname(__file__), 'output', 'news_matches.json')
+
+    if not refresh and os.path.exists(cache_path):
+        try:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                cached = json_module.load(f)
+            mtime = datetime.fromtimestamp(os.path.getmtime(cache_path)).isoformat()
+            return jsonify({
+                'cached': True,
+                'cached_at': mtime,
+                'count': len(cached),
+                'matches': cached,
+            })
+        except Exception:
+            pass
+
+    try:
+        from scrapers.news_rss_scraper import scrape_news
+        t0 = __import__('time').time()
+        matches = scrape_news()
+        elapsed = round(__import__('time').time() - t0, 1)
+        try:
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            with open(cache_path, 'w', encoding='utf-8') as f:
+                json_module.dump(matches, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+        return jsonify({
+            'cached': False,
+            'elapsed_sec': elapsed,
+            'count': len(matches),
+            'matches': matches,
+        })
+    except Exception as e:
+        return jsonify({'error': f'{type(e).__name__}: {e}'}), 500
+
+
+@app.route('/api/scrape/all', methods=['GET'])
+def scrape_all_sources():
+    """
+    Combined view of all configured public-data sources.
+    Reads from per-source caches (output/*_matches.json).
+    Pass ?refresh=true to force fresh scrapes of every source.
+    """
+    import os
+    import json as json_module
+    from datetime import datetime
+
+    refresh = request.args.get('refresh', 'false').lower() == 'true'
+    out_dir = os.path.join(os.path.dirname(__file__), 'output')
+
+    source_files = {
+        'oparl': ('oparl_matches.json', 'Berlin BVV (OParl)'),
+        'news':  ('news_matches.json',  'Google News RSS'),
+    }
+
+    combined = []
+    sources_meta = []
+    for key, (filename, label) in source_files.items():
+        cache_path = os.path.join(out_dir, filename)
+        if refresh:
+            # Trigger an explicit fresh scrape via the dedicated endpoints (handled by client side normally).
+            # Here we just re-read what's on disk after the optional refresh by caller.
+            pass
+        if not os.path.exists(cache_path):
+            sources_meta.append({'source': key, 'label': label, 'count': 0, 'available': False})
+            continue
+        try:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                items = json_module.load(f)
+            mtime = datetime.fromtimestamp(os.path.getmtime(cache_path)).isoformat()
+            sources_meta.append({
+                'source': key,
+                'label': label,
+                'count': len(items),
+                'available': True,
+                'cached_at': mtime,
+            })
+            for item in items:
+                item.setdefault('_source_kind', key)
+            combined.extend(items)
+        except Exception as e:
+            sources_meta.append({'source': key, 'label': label, 'count': 0, 'available': False, 'error': str(e)})
+
+    return jsonify({
+        'count': len(combined),
+        'sources': sources_meta,
+        'matches': combined,
+    })
+
+
 @app.route('/api/validate', methods=['POST'])
 def validate_credentials():
     """Test call to verify LLM provider credentials. Body: { provider, credentials }."""

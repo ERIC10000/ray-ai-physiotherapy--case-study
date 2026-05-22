@@ -32,43 +32,63 @@ except (AttributeError, ValueError):
 
 
 # ---------------------------------------------------------------------------
-# Districts — verified BVV Mitte; the others follow the same ALLRIS / OParl
-# pattern. Endpoints are confirmed by hitting /system.asp.
+# OParl endpoints — sourced from https://github.com/OParl/resources/blob/main/endpoints.yml
+# plus a few discovered by following the standard ALLRIS pattern.
+# Format: display_name -> base URL (without trailing slash, ending in /1.0 or /1.1)
 # ---------------------------------------------------------------------------
-OPARL_DISTRICTS: dict[str, str] = {
-    "Mitte":                       "https://www.sitzungsdienst-mitte.de/oi/oparl/1.0",
-    "Friedrichshain-Kreuzberg":    "https://www.sitzungsdienst.fk.berlin.de/oi/oparl/1.0",
-    "Pankow":                      "https://www.sitzungsdienst-pankow.de/oi/oparl/1.0",
-    "Charlottenburg-Wilmersdorf":  "https://www.sitzungsdienst-cw.de/oi/oparl/1.0",
-    "Spandau":                     "https://www.sitzungsdienst-spandau.de/oi/oparl/1.0",
-    "Steglitz-Zehlendorf":         "https://www.sitzungsdienst-sz.de/oi/oparl/1.0",
-    "Tempelhof-Schöneberg":        "https://www.sitzungsdienst-ts.de/oi/oparl/1.0",
-    "Neukölln":                    "https://www.sitzungsdienst-neukoelln.de/oi/oparl/1.0",
-    "Treptow-Köpenick":            "https://www.sitzungsdienst-tk.de/oi/oparl/1.0",
-    "Marzahn-Hellersdorf":         "https://www.sitzungsdienst-mh.de/oi/oparl/1.0",
-    "Lichtenberg":                 "https://www.sitzungsdienst-lichtenberg.de/oi/oparl/1.0",
-    "Reinickendorf":               "https://www.sitzungsdienst-reinickendorf.de/oi/oparl/1.0",
+OPARL_SOURCES: dict[str, str] = {
+    # ---------- Berlin districts (ALLRIS / sitzungsdienst-*.de) ----------
+    "Berlin-Mitte":                       "https://www.sitzungsdienst-mitte.de/oi/oparl/1.0",
+    "Berlin-Friedrichshain-Kreuzberg":    "https://www.sitzungsdienst-friedrichshain-kreuzberg.de/oi/oparl/1.0",
+    "Berlin-Pankow":                      "https://www.sitzungsdienst-pankow.de/oi/oparl/1.0",
+    "Berlin-Charlottenburg-Wilmersdorf":  "https://www.sitzungsdienst-charlottenburg-wilmersdorf.de/oi/oparl/1.0",
+    "Berlin-Spandau":                     "https://www.sitzungsdienst-spandau.de/oi/oparl/1.0",
+    "Berlin-Steglitz-Zehlendorf":         "https://www.sitzungsdienst-steglitz-zehlendorf.de/oi/oparl/1.0",
+    "Berlin-Tempelhof-Schöneberg":        "https://www.sitzungsdienst-tempelhof-schoeneberg.de/oi/oparl/1.0",
+    "Berlin-Neukölln":                    "https://www.sitzungsdienst-neukoelln.de/oi/oparl/1.0",
+    "Berlin-Treptow-Köpenick":            "https://www.sitzungsdienst-treptow-koepenick.de/oi/oparl/1.0",
+    "Berlin-Marzahn-Hellersdorf":         "https://www.sitzungsdienst-marzahn-hellersdorf.de/oi/oparl/1.1",
+    "Berlin-Lichtenberg":                 "https://www.sitzungsdienst-lichtenberg.de/oi/oparl/1.0",
+    "Berlin-Reinickendorf":               "https://www.sitzungsdienst-reinickendorf.de/oi/oparl/1.0",
+    # ---------- Other cities in scope ----------
+    "Leipzig":                            "https://ratsinformation.leipzig.de/allris_leipzig_public/oparl",
+    "Dresden":                            "https://oparl.dresden.de",
 }
 
+# Backward-compat alias for any external callers
+OPARL_DISTRICTS = OPARL_SOURCES
 
-# Medical-building keywords — match in paper titles/subjects.
-# German real-estate terms used by district councils + senate planning.
+
+# Medical-building keywords — broader set for better recall.
+# Strategy: catch by name, but also indirect signals like land-use, healthcare-adjacent terms.
 MEDICAL_KEYWORDS = [
+    # Direct project-name matches
     "Ärztehaus", "ärztehaus",
     "Medizinisches Versorgungszentrum", "MVZ ", "MVZ-",
     "Praxisklinik", "Gesundheitszentrum",
     "Facharztzentrum", "Ambulantes Zentrum",
     "Tagesklinik", "Polyklinik",
     "Praxiszentrum",
-    # broader — useful in motions about land-use changes
+    # Practice and outpatient terms
+    "Arztpraxis", "Hausarztpraxis", "Hausarzt",
+    "Praxisgemeinschaft", "Gemeinschaftspraxis",
+    # Broader healthcare context
     "medizinische Versorgung", "Gesundheitsversorgung",
-    "Arztpraxis", "Hausarzt",
+    "ärztliche Versorgung", "ambulante Versorgung",
+    # Specialty fields that often co-locate
+    "Physiotherapie", "Rehabilitation", "Rehazentrum",
+    "Pflegezentrum", "Pflegeeinrichtung",
+    # Buildings that may include medical use
+    "Sondergebiet Gesundheit", "Gesundheitsstandort",
+    "Gesundheitsdienstleist",   # matches Gesundheitsdienstleistung/-er
 ]
 
-# Construction/planning context — co-occurrence boosts relevance
+# Construction/planning context — co-occurrence boosts relevance.
+# Used as a secondary signal when titles are generic.
 CONSTRUCTION_KEYWORDS = [
     "Neubau", "Bauvorhaben", "Bebauungsplan", "Bauantrag",
     "Aufstellung", "Errichtung", "Sondergebiet", "Umnutzung",
+    "Sanierung", "Modernisierung", "Erweiterung",
 ]
 
 
@@ -137,13 +157,49 @@ def _matches_keywords(text: str, keywords: list[str]) -> list[str]:
 # ---------------------------------------------------------------------------
 # OParl traversal
 # ---------------------------------------------------------------------------
-def _iter_papers(base_url: str, since: datetime, max_pages: int = 20) -> Iterator[dict]:
+def _discover_paper_endpoints(base_url: str) -> list[str]:
     """
-    Iterate papers for a district's body, filtered by modified_since.
+    Discover all paper endpoint URLs for an OParl system.
+    Strategy: try `bodies` endpoint, collect each body's `papers` link.
+    Always include the body=1 fallback as well to guarantee we have something to scrape.
+    """
+    is_asp = base_url.endswith(("/1.0", "/1.1"))
+    bodies_url = f"{base_url}/bodies.asp" if is_asp else f"{base_url}/bodies"
+    fallback = [f"{base_url}/papers.asp?body=1"] if is_asp else [f"{base_url}/papers?body=1"]
+
+    data = _http_get_json(bodies_url)
+    if not data:
+        return fallback
+
+    endpoints: list[str] = []
+    bodies = data.get("data") or []
+    for body in bodies:
+        # Most ALLRIS systems expose body.papers; some omit it but still respond to ?body=N
+        papers_link = body.get("papers")
+        if papers_link:
+            endpoints.append(papers_link)
+            continue
+        # Derive from body.id (e.g. .../bodies.asp?id=1 → .../papers.asp?body=1)
+        body_id_url = body.get("id") or ""
+        if "id=" in body_id_url:
+            body_num = body_id_url.split("id=")[-1]
+            if is_asp:
+                endpoints.append(f"{base_url}/papers.asp?body={body_num}")
+            else:
+                endpoints.append(f"{base_url}/papers?body={body_num}")
+
+    # Always include the standard fallback if we found nothing
+    return endpoints or fallback
+
+
+def _iter_papers(papers_url: str, since: datetime, max_pages: int = 20) -> Iterator[dict]:
+    """
+    Iterate papers from one papers endpoint, filtered by modified_since.
     Pages until exhausted or max_pages reached. Yields raw OParl paper objects.
     """
     iso = since.strftime("%Y-%m-%dT%H:%M:%SZ")
-    url = f"{base_url}/papers.asp?body=1&modified_since={iso}"
+    sep = "&" if "?" in papers_url else "?"
+    url = f"{papers_url}{sep}modified_since={iso}"
     page = 0
     seen = 0
     while url and page < max_pages:
@@ -155,7 +211,6 @@ def _iter_papers(base_url: str, since: datetime, max_pages: int = 20) -> Iterato
             seen += 1
             yield item
         url = (data.get("links") or {}).get("next")
-    print(f"    Fetched {seen} papers across {page} page(s)")
 
 
 def scrape_district(
@@ -163,34 +218,52 @@ def scrape_district(
     base_url: str,
     since: datetime,
     keywords: list[str] = MEDICAL_KEYWORDS,
-    max_pages: int = 20,
+    max_pages_per_body: int = 15,
 ) -> list[OparlPaper]:
-    """Scrape one district's papers, filter by keyword."""
+    """Scrape ALL bodies (BVV + committees) of one district/city."""
     print(f"\n→ {district}")
     print(f"  Base: {base_url}")
+
+    paper_endpoints = _discover_paper_endpoints(base_url)
+    if not paper_endpoints:
+        print(f"  ✗ No paper endpoints discovered")
+        return []
+    print(f"  Discovered {len(paper_endpoints)} body/committee endpoint(s)")
+
     matches: list[OparlPaper] = []
-    for paper in _iter_papers(base_url, since, max_pages=max_pages):
-        title = paper.get("name") or ""
-        subject = paper.get("subject") or ""
-        haystack = f"{title}\n{subject}"
-        hits = _matches_keywords(haystack, keywords)
-        if not hits:
-            continue
-        main_file = paper.get("mainFile") or {}
-        matches.append(OparlPaper(
-            district=district,
-            paper_id=paper.get("id", ""),
-            title=title or subject or "(no title)",
-            reference=paper.get("reference") or "",
-            paper_type=paper.get("paperType") or "",
-            created=paper.get("created"),
-            modified=paper.get("modified"),
-            web_link=paper.get("web"),
-            pdf_url=main_file.get("downloadUrl") or main_file.get("accessUrl"),
-            matched_keywords=hits,
-        ))
-        print(f"  ✓ Match: {title[:80]}  ({', '.join(hits)})")
-    print(f"  → {len(matches)} match(es) in {district}")
+    seen_paper_ids: set[str] = set()
+    total_papers_seen = 0
+
+    for endpoint in paper_endpoints:
+        for paper in _iter_papers(endpoint, since, max_pages=max_pages_per_body):
+            total_papers_seen += 1
+            paper_id = paper.get("id", "")
+            if paper_id in seen_paper_ids:
+                continue  # same paper referenced from multiple committees
+            seen_paper_ids.add(paper_id)
+
+            title = paper.get("name") or ""
+            subject = paper.get("subject") or ""
+            haystack = f"{title}\n{subject}"
+            hits = _matches_keywords(haystack, keywords)
+            if not hits:
+                continue
+            main_file = paper.get("mainFile") or {}
+            matches.append(OparlPaper(
+                district=district,
+                paper_id=paper_id,
+                title=title or subject or "(no title)",
+                reference=paper.get("reference") or "",
+                paper_type=paper.get("paperType") or "",
+                created=paper.get("created"),
+                modified=paper.get("modified"),
+                web_link=paper.get("web"),
+                pdf_url=main_file.get("downloadUrl") or main_file.get("accessUrl"),
+                matched_keywords=hits,
+            ))
+            print(f"  ✓ Match: {title[:80]}  ({', '.join(hits)})")
+
+    print(f"  → {len(matches)} match(es) in {district}  (scanned {total_papers_seen} papers across {len(paper_endpoints)} bodies)")
     return matches
 
 
@@ -211,8 +284,13 @@ def scrape_all_districts(
     failed = 0
     for district, base_url in districts.items():
         try:
-            # Verify the endpoint is reachable before paginating
-            system = _http_get_json(f"{base_url}/system.asp", timeout=8, retries=0)
+            # Verify the endpoint is reachable — URL pattern varies (Berlin uses .asp, others don't)
+            system_url = (
+                f"{base_url}/system.asp"
+                if base_url.endswith(("/1.0", "/1.1"))
+                else f"{base_url}/system"
+            )
+            system = _http_get_json(system_url, timeout=8, retries=0)
             if not system:
                 print(f"\n→ {district}: endpoint not reachable, skipping")
                 failed += 1

@@ -5519,33 +5519,54 @@
                     }
                     addLog('info', `Provider: ${providerLabel} · Model: ${modelLabel} · 5 concurrent`);
 
-                    // ----- Try REAL Berlin OParl source first -----
+                    // ----- Pull REAL data from all configured public sources -----
                     let sourceProjects = [];
                     let realSource = false;
-                    addLog('info', `→ Fetching real Berlin OParl matches (district council motions)...`);
+                    addLog('info', `→ Fetching real public-data matches from all sources...`);
                     try {
-                        const oparlR = await fetch('/api/scrape/oparl');
-                        const oparlData = await oparlR.json();
-                        if (oparlData.matches && oparlData.matches.length) {
-                            sourceProjects = oparlData.matches.map(m => ({
+                        const r = await fetch('/api/scrape/all');
+                        const combined = await r.json();
+                        const meta = combined.sources || [];
+                        meta.forEach(s => {
+                            if (s.available) {
+                                addLog('success', `  ${s.label}: ${s.count} match(es) (cached ${s.cached_at?.slice(0, 19) || ''})`);
+                            } else {
+                                addLog('warning', `  ${s.label}: unavailable${s.error ? ' (' + s.error + ')' : ''}`);
+                            }
+                        });
+
+                        if (combined.matches && combined.matches.length) {
+                            // Prioritise OParl (rare verifiable government records) over news, then cap to target budget
+                            const oparlItems = combined.matches.filter(m => m._source_kind === 'oparl');
+                            const newsItems  = combined.matches.filter(m => m._source_kind === 'news');
+                            const prioritized = [...oparlItems, ...newsItems];
+
+                            const totalAvailable = prioritized.length;
+                            const capped = prioritized.slice(0, finalCount);
+
+                            sourceProjects = capped.map(m => ({
                                 name: m.name, city: m.city, source: m.source,
                                 description: m.description, url: m.url,
-                                _verified_url: m.url,  // preserve for provenance
+                                _verified_url: m.url,
+                                _source_kind: m._source_kind,
                                 _oparl_district: m._oparl_district,
                             }));
                             realSource = true;
-                            const cacheNote = oparlData.cached
-                                ? `(cached ${oparlData.cached_at?.slice(0, 19) || ''})`
-                                : `(fresh, ${oparlData.elapsed_sec}s)`;
-                            addLog('success', `✓ Loaded ${sourceProjects.length} REAL Berlin OParl match(es) ${cacheNote}`);
-                            sourceProjects.forEach((p, i) => {
-                                addLog('info', `  [${i+1}] ${p.name.substring(0, 70)} — ${p._oparl_district}`);
+                            const oparlInBatch = sourceProjects.filter(p => p._source_kind === 'oparl').length;
+                            const newsInBatch  = sourceProjects.filter(p => p._source_kind === 'news').length;
+                            addLog('success', `✓ Loaded ${sourceProjects.length}/${totalAvailable} REAL public-record matches (${oparlInBatch} OParl + ${newsInBatch} News)`);
+                            sourceProjects.slice(0, 8).forEach((p, i) => {
+                                const kind = p._source_kind === 'oparl' ? 'OParl' : 'News';
+                                addLog('info', `  [${i+1}] ${p.name.substring(0, 65)} — ${kind} · ${p.city}`);
                             });
+                            if (sourceProjects.length > 8) {
+                                addLog('info', `  + ${sourceProjects.length - 8} more matches (will all be qualified)...`);
+                            }
                         } else {
-                            addLog('warning', `OParl returned 0 matches — falling back to demo descriptions`);
+                            addLog('warning', `No real-source matches — falling back to demo descriptions`);
                         }
                     } catch (e) {
-                        addLog('warning', `OParl scrape failed: ${e.message} — using demo data`);
+                        addLog('warning', `Source scrape failed: ${e.message} — using demo data`);
                     }
 
                     // ----- Fall back to demo CSV if no real matches -----
