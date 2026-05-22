@@ -72,6 +72,61 @@ def get_leads():
     })
 
 
+@app.route('/api/scrape/oparl', methods=['GET'])
+def scrape_oparl():
+    """
+    Real OParl scrape across Berlin BVV districts.
+    Caches results to output/oparl_matches.json. Pass ?refresh=true to force a fresh scrape.
+    Query params:
+        days   - lookback window in days (default 730)
+        refresh - 'true' to bypass cache
+    """
+    import os
+    import json as json_module
+    from datetime import datetime
+
+    days = int(request.args.get('days', '730'))
+    refresh = request.args.get('refresh', 'false').lower() == 'true'
+    cache_path = os.path.join(os.path.dirname(__file__), 'output', 'oparl_matches.json')
+
+    # Serve from cache if available and refresh not requested
+    if not refresh and os.path.exists(cache_path):
+        try:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                cached = json_module.load(f)
+            mtime = datetime.fromtimestamp(os.path.getmtime(cache_path)).isoformat()
+            return jsonify({
+                'cached': True,
+                'cached_at': mtime,
+                'count': len(cached),
+                'matches': cached,
+            })
+        except Exception:
+            pass
+
+    # Run a fresh scrape
+    try:
+        from scrapers.oparl_scraper import scrape_all_districts
+        t0 = __import__('time').time()
+        matches = scrape_all_districts(since_days=days)
+        elapsed = round(__import__('time').time() - t0, 1)
+        # Persist
+        try:
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            with open(cache_path, 'w', encoding='utf-8') as f:
+                json_module.dump(matches, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+        return jsonify({
+            'cached': False,
+            'elapsed_sec': elapsed,
+            'count': len(matches),
+            'matches': matches,
+        })
+    except Exception as e:
+        return jsonify({'error': f'{type(e).__name__}: {e}'}), 500
+
+
 @app.route('/api/validate', methods=['POST'])
 def validate_credentials():
     """Test call to verify LLM provider credentials. Body: { provider, credentials }."""

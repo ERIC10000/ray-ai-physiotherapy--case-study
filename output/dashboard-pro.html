@@ -2273,6 +2273,77 @@
             line-height: 1.6;
         }
 
+        /* ===== PROVENANCE / VERIFIABLE SOURCE LINK ===== */
+        .provenance-row {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .provenance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gray-700);
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            width: fit-content;
+        }
+
+        .provenance-badge.verified {
+            color: var(--success-dark);
+            background: var(--success-bg);
+            border-color: #a7f3d0;
+        }
+
+        .provenance-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .provenance-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s;
+            word-break: break-all;
+        }
+
+        .provenance-link:hover {
+            background: var(--primary-bg);
+            border-color: var(--primary);
+        }
+
+        .provenance-link svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            color: var(--gray-400);
+        }
+
+        .provenance-link:hover svg {
+            color: var(--primary);
+        }
+
         /* ===== TOAST ===== */
         .toast-container {
             position: fixed;
@@ -4579,6 +4650,10 @@
                     <div class="modal-section-title">📊 Project Details</div>
                     <div class="detail-grid" id="modal-details"></div>
                 </div>
+                <div class="modal-section" id="modal-provenance-section">
+                    <div class="modal-section-title">🔗 Verify at source</div>
+                    <div id="modal-provenance"></div>
+                </div>
                 <div class="modal-section">
                     <div class="modal-section-title">🧠 AI Qualification Reasoning</div>
                     <div class="reasoning-box" id="modal-reasoning"></div>
@@ -4600,13 +4675,27 @@
         let selectedProject = null;
 
         const cityCoordinates = {
+            // Top-level cities
             'Berlin': [52.5200, 13.4050],
             'Potsdam': [52.3906, 13.0645],
             'Cottbus': [51.7558, 14.3354],
             'Magdeburg': [52.1295, 11.6368],
             'Halle': [51.4766, 11.9751],
             'Leipzig': [51.3397, 12.3731],
-            'Dresden': [51.0504, 13.7373]
+            'Dresden': [51.0504, 13.7373],
+            // Berlin districts (OParl source granularity)
+            'Berlin-Mitte': [52.5200, 13.4050],
+            'Berlin-Friedrichshain-Kreuzberg': [52.5008, 13.4540],
+            'Berlin-Pankow': [52.5697, 13.4019],
+            'Berlin-Charlottenburg-Wilmersdorf': [52.5066, 13.2849],
+            'Berlin-Spandau': [52.5350, 13.2056],
+            'Berlin-Steglitz-Zehlendorf': [52.4419, 13.2602],
+            'Berlin-Tempelhof-Schöneberg': [52.4663, 13.3852],
+            'Berlin-Neukölln': [52.4811, 13.4350],
+            'Berlin-Treptow-Köpenick': [52.4408, 13.5811],
+            'Berlin-Marzahn-Hellersdorf': [52.5469, 13.5750],
+            'Berlin-Lichtenberg': [52.5119, 13.5061],
+            'Berlin-Reinickendorf': [52.5775, 13.3253],
         };
 
         const qualityColors = {
@@ -5430,18 +5519,51 @@
                     }
                     addLog('info', `Provider: ${providerLabel} · Model: ${modelLabel} · 5 concurrent`);
 
-                    // Fetch source descriptions (from demo CSV) and qualify each in real time
+                    // ----- Try REAL Berlin OParl source first -----
                     let sourceProjects = [];
+                    let realSource = false;
+                    addLog('info', `→ Fetching real Berlin OParl matches (district council motions)...`);
                     try {
-                        const r = await fetch('/api/leads');
-                        const d = await r.json();
-                        sourceProjects = (d.leads || []).map(p => ({
-                            name: p.Name, city: p.City, source: p.Source,
-                            description: p.Description, url: p.URL,
-                        }));
+                        const oparlR = await fetch('/api/scrape/oparl');
+                        const oparlData = await oparlR.json();
+                        if (oparlData.matches && oparlData.matches.length) {
+                            sourceProjects = oparlData.matches.map(m => ({
+                                name: m.name, city: m.city, source: m.source,
+                                description: m.description, url: m.url,
+                                _verified_url: m.url,  // preserve for provenance
+                                _oparl_district: m._oparl_district,
+                            }));
+                            realSource = true;
+                            const cacheNote = oparlData.cached
+                                ? `(cached ${oparlData.cached_at?.slice(0, 19) || ''})`
+                                : `(fresh, ${oparlData.elapsed_sec}s)`;
+                            addLog('success', `✓ Loaded ${sourceProjects.length} REAL Berlin OParl match(es) ${cacheNote}`);
+                            sourceProjects.forEach((p, i) => {
+                                addLog('info', `  [${i+1}] ${p.name.substring(0, 70)} — ${p._oparl_district}`);
+                            });
+                        } else {
+                            addLog('warning', `OParl returned 0 matches — falling back to demo descriptions`);
+                        }
                     } catch (e) {
-                        addLog('error', `Could not load source projects: ${e.message}`);
+                        addLog('warning', `OParl scrape failed: ${e.message} — using demo data`);
                     }
+
+                    // ----- Fall back to demo CSV if no real matches -----
+                    if (sourceProjects.length === 0) {
+                        try {
+                            const r = await fetch('/api/leads');
+                            const d = await r.json();
+                            sourceProjects = (d.leads || []).map(p => ({
+                                name: p.Name, city: p.City, source: p.Source,
+                                description: p.Description, url: p.URL,
+                            }));
+                            addLog('info', `Using ${sourceProjects.length} demo source descriptions`);
+                        } catch (e) {
+                            addLog('error', `Could not load fallback source projects: ${e.message}`);
+                        }
+                    }
+
+                    addLog('info', `Source: ${realSource ? 'REAL Berlin BVV (OParl)' : 'DEMO (mock data)'} · ${sourceProjects.length} project(s) to qualify`);
 
                     const liveResults = [];
                     let totalLatency = 0, totalIn = 0, totalOut = 0, errors = 0;
@@ -6119,6 +6241,37 @@
                     <div class="detail-value">${escapeHtml(p['Source'] || '—')}</div>
                 </div>
             `;
+
+            // Provenance — show clickable source URL for verification (any lead with a URL)
+            const url = p['URL'];
+            const isVerifiable = url && /^https?:\/\//.test(url);
+            const provenanceSection = document.getElementById('modal-provenance');
+            const provenanceWrap = document.getElementById('modal-provenance-section');
+            if (provenanceSection && provenanceWrap) {
+                if (isVerifiable) {
+                    provenanceWrap.style.display = '';
+                    const isOparl = url.includes('berlin.de') || url.includes('sitzungsdienst');
+                    provenanceSection.innerHTML = `
+                        <div class="provenance-row">
+                            <div class="provenance-badge ${isOparl ? 'verified' : ''}">
+                                ${isOparl ? `
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Verifiable public record
+                                ` : `
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                    Source link
+                                `}
+                            </div>
+                            <a class="provenance-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+                                <span>${escapeHtml(url)}</span>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    provenanceWrap.style.display = 'none';
+                }
+            }
 
             document.getElementById('modal-reasoning').textContent = p['Reasoning'] || 'No reasoning provided.';
             document.getElementById('modal-backdrop').classList.add('active');
