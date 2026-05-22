@@ -1,22 +1,42 @@
 [
   {
-    "name": "Fahrstuhlnutzung Ärztehaus Fennpfuhl",
-    "city": "Berlin-Lichtenberg",
-    "source": "BVV Lichtenberg (OParl)",
-    "description": "BVV-Drucksache DS/0317/V (Mündliche Anfrage). Erkannte Stichwörter: Ärztehaus, ärztehaus. Volltext im PDF verfügbar.",
-    "url": "https://www.berlin.de/ba-lichtenberg/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=780",
-    "_oparl_paper_id": "https://www.sitzungsdienst-lichtenberg.de/oi/oparl/1.0/papers.asp?id=780",
-    "_oparl_district": "Lichtenberg",
+    "name": "Krankenhaus/Gesundheitsstandort Moabit",
+    "city": "Berlin-Berlin-Mitte",
+    "source": "BVV Berlin-Mitte (OParl)",
+    "description": "BVV-Drucksache 0109/II (Große Anfrage). Erkannte Stichwörter: Gesundheitsstandort. Volltext im PDF verfügbar.",
+    "url": "https://www.berlin.de/ba-mitte/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=109",
+    "_oparl_paper_id": "https://www.sitzungsdienst-mitte.de/oi/oparl/1.0/papers.asp?id=109",
+    "_oparl_district": "Berlin-Mitte",
     "_pdf_url": null
   },
   {
-    "name": "Schließung der Arztpraxis für Obdachlose in der Weitlingstraße zum 01.10.2002",
-    "city": "Berlin-Lichtenberg",
-    "source": "BVV Lichtenberg (OParl)",
-    "description": "BVV-Drucksache DS/0323/V (Vorlage zur Kenntnisnahme). Erkannte Stichwörter: Arztpraxis. Volltext im PDF verfügbar.",
-    "url": "https://www.berlin.de/ba-lichtenberg/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=786",
-    "_oparl_paper_id": "https://www.sitzungsdienst-lichtenberg.de/oi/oparl/1.0/papers.asp?id=786",
-    "_oparl_district": "Lichtenberg",
-    "_pdf_url": null
+    "name": "Medizinische Versorgung Obdachloser",
+    "city": "Berlin-Berlin-Friedrichshain-Kreuzberg",
+    "source": "BVV Berlin-Friedrichshain-Kreuzberg (OParl)",
+    "description": "BVV-Drucksache DS/0319/II (Mündliche Anfrage). Erkannte Stichwörter: medizinische Versorgung. Volltext im PDF verfügbar.",
+    "url": "https://www.berlin.de/ba-friedrichshain-kreuzberg/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=320",
+    "_oparl_paper_id": "https://www.sitzungsdienst-friedrichshain-kreuzberg.de/oi/oparl/1.0/papers.asp?id=320",
+    "_oparl_district": "Berlin-Friedrichshain-Kreuzberg",
+    "_pdf_url": "https://www.sitzungsdienst-friedrichshain-kreuzberg.de/oi/oparl/1.0/download.asp?dtyp=130&id=94459"
+  },
+  {
+    "name": "Medizinische Versorgung Obdachlose",
+    "city": "Berlin-Berlin-Friedrichshain-Kreuzberg",
+    "source": "BVV Berlin-Friedrichshain-Kreuzberg (OParl)",
+    "description": "BVV-Drucksache DS/0325/II (Mündliche Anfrage). Erkannte Stichwörter: medizinische Versorgung. Volltext im PDF verfügbar.",
+    "url": "https://www.berlin.de/ba-friedrichshain-kreuzberg/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=326",
+    "_oparl_paper_id": "https://www.sitzungsdienst-friedrichshain-kreuzberg.de/oi/oparl/1.0/papers.asp?id=326",
+    "_oparl_district": "Berlin-Friedrichshain-Kreuzberg",
+    "_pdf_url": "https://www.sitzungsdienst-friedrichshain-kreuzberg.de/oi/oparl/1.0/download.asp?dtyp=130&id=94423"
+  },
+  {
+    "name": "Sozialgesetzbuch IX - Rehabilitation und Teilhabe behinderter Menschen",
+    "city": "Berlin-Berlin-Reinickendorf",
+    "source": "BVV Berlin-Reinickendorf (OParl)",
+    "description": "BVV-Drucksache 0343/XVII (Änderungsantrag). Erkannte Stichwörter: Rehabilitation. Volltext im PDF verfügbar.",
+    "url": "https://www.berlin.de/ba-reinickendorf/politik-und-verwaltung/bezirksverordnetenversammlung/online/vo020.asp?VOLFDNR=176",
+    "_oparl_paper_id": "https://www.sitzungsdienst-reinickendorf.de/oi/oparl/1.0/papers.asp?id=176",
+    "_oparl_district": "Berlin-Reinickendorf",
+    "_pdf_url": "https://www.sitzungsdienst-reinickendorf.de/oi/oparl/1.0/download.asp?dtyp=130&id=90948"
   }
 ]
