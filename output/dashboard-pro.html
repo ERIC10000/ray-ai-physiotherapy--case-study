@@ -838,6 +838,125 @@
             color: var(--primary-dark);
         }
 
+        .badge-live {
+            background: var(--success-bg);
+            color: var(--success-dark);
+            position: relative;
+            padding-left: 16px;
+        }
+
+        .badge-live::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .badge-planned {
+            background: var(--gray-100);
+            color: var(--gray-500);
+            border: 1px dashed var(--gray-300);
+        }
+
+        .checkbox-card input:disabled + .checkbox-card-content,
+        .checkbox-card:has(input:disabled) {
+            opacity: 0.75;
+        }
+
+        .checkbox-card:has(input:disabled) {
+            cursor: not-allowed;
+            background: var(--gray-50);
+        }
+
+        .checkbox-card:has(input:disabled):hover {
+            border-color: var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .source-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-bottom: 14px;
+        }
+
+        .source-status-bar.ok {
+            background: var(--success-bg);
+            border-color: #a7f3d0;
+            color: var(--success-dark);
+        }
+
+        .source-status-bar.error {
+            background: var(--danger-bg);
+            border-color: #fecaca;
+            color: var(--danger-dark);
+        }
+
+        .source-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-400);
+            flex-shrink: 0;
+        }
+
+        .source-status-bar.ok .source-status-dot {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .source-status-bar.error .source-status-dot {
+            background: var(--danger);
+        }
+
+        .src-count {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            margin-left: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            color: var(--gray-700);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .src-count.live {
+            background: var(--success-bg);
+            border-color: #a7f3d0;
+            color: var(--success-dark);
+        }
+
+        .source-footnote {
+            margin-top: 18px;
+            padding: 12px 14px;
+            background: var(--primary-bg);
+            border-left: 3px solid var(--primary);
+            border-radius: var(--radius);
+            font-size: 12.5px;
+            color: var(--gray-700);
+            line-height: 1.55;
+        }
+
+        .source-footnote strong {
+            color: var(--gray-900);
+        }
+
         .wizard-actions {
             display: flex;
             justify-content: space-between;
@@ -4149,53 +4268,76 @@
 
                 <!-- Step 2: Data Sources -->
                 <div class="wizard-body" id="wizard-step-2" style="display: none;">
-                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Select your data sources</h3>
-                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 24px;">Choose where to discover medical building projects. More sources = more leads.</p>
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px;">Public data sources</h3>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 18px;">Sources marked <strong>Live</strong> are wired and producing real results. <strong>Planned</strong> sources are scoped but not yet implemented.</p>
+
+                    <div id="source-status-bar" class="source-status-bar">
+                        <span class="source-status-dot"></span>
+                        <span id="source-status-text">Loading source status…</span>
+                    </div>
 
                     <div class="checkbox-group">
                         <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
                             <input type="checkbox" id="src-news" checked>
                             <div class="checkbox-card-content">
                                 <div class="checkbox-card-title">
-                                    Google News
-                                    <span class="badge badge-free">Free</span>
+                                    Google News RSS
+                                    <span class="badge badge-live">Live</span>
                                 </div>
-                                <div class="checkbox-card-desc">RSS feeds for healthcare building announcements across 7 cities</div>
+                                <div class="checkbox-card-desc">
+                                    Real recent press coverage across 7 target cities × 5 medical keywords.
+                                    Free, no API key. <span id="src-news-count" class="src-count">—</span>
+                                </div>
                             </div>
                         </label>
 
                         <label class="checkbox-card selected" onclick="toggleSourceCard(this)">
-                            <input type="checkbox" id="src-press" checked>
+                            <input type="checkbox" id="src-oparl" checked>
                             <div class="checkbox-card-content">
                                 <div class="checkbox-card-title">
-                                    Press Archive
-                                    <span class="badge badge-free">Free</span>
+                                    Berlin BVV (OParl)
+                                    <span class="badge badge-live">Live</span>
                                 </div>
-                                <div class="checkbox-card-desc">Bing News + developer websites for medical facility projects</div>
+                                <div class="checkbox-card-desc">
+                                    District council motions via official OParl API. 12 Berlin districts + Leipzig + Dresden.
+                                    Free, verifiable. <span id="src-oparl-count" class="src-count">—</span>
+                                </div>
                             </div>
                         </label>
 
                         <label class="checkbox-card" onclick="toggleSourceCard(this)">
-                            <input type="checkbox" id="src-fis">
+                            <input type="checkbox" id="src-bplan" disabled>
                             <div class="checkbox-card-content">
                                 <div class="checkbox-card-title">
-                                    FIS-Broker Berlin
-                                    <span class="badge badge-pro">API Key</span>
+                                    Bebauungsplanverfahren WFS
+                                    <span class="badge badge-planned">Planned</span>
                                 </div>
-                                <div class="checkbox-card-desc">Official Berlin geoportal with construction permits & zoning</div>
+                                <div class="checkbox-card-desc">
+                                    Berlin Senate WFS endpoint for in-progress zoning procedures. Will flag when a B-Plan
+                                    overlaps a healthcare-keyword motion. Requires GML/XML parsing.
+                                </div>
                             </div>
                         </label>
 
                         <label class="checkbox-card" onclick="toggleSourceCard(this)">
-                            <input type="checkbox" id="src-state">
+                            <input type="checkbox" id="src-state" disabled>
                             <div class="checkbox-card-content">
                                 <div class="checkbox-card-title">
                                     State Geoportals
-                                    <span class="badge badge-pro">API Key</span>
+                                    <span class="badge badge-planned">Planned</span>
                                 </div>
-                                <div class="checkbox-card-desc">Brandenburg, Saxony, Saxony-Anhalt official data sources</div>
+                                <div class="checkbox-card-desc">
+                                    Brandenburg, Sachsen, Sachsen-Anhalt — each state's open-data portal + council
+                                    information system. Covers cities outside Berlin in the 2-hour radius.
+                                </div>
                             </div>
                         </label>
+                    </div>
+
+                    <div class="source-footnote">
+                        <strong>Why two free sources?</strong> The brief asked for "at least two different public sources."
+                        Google News gives broad recall (often after public marketing). OParl gives narrow but verifiable
+                        early signals (12–24 months ahead). Combined they cover both tails.
                     </div>
                 </div>
 
@@ -4767,6 +4909,10 @@
                 document.getElementById('step-' + currentStep).classList.add('active');
                 document.getElementById('btn-back').style.display = 'inline-flex';
                 document.getElementById('wizard-info').textContent = `Step ${currentStep} of 3`;
+                if (currentStep === 2) {
+                    // Load live source counts when entering data-sources step
+                    loadSourceStatus();
+                }
                 if (currentStep === 3) {
                     document.getElementById('btn-next').innerHTML = `Start Collection<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`;
                     // Initialize slider gradient and estimate
@@ -4837,10 +4983,10 @@
                 google: document.getElementById('google-key')?.value?.trim() || '',
                 fis: document.getElementById('fis-key')?.value?.trim() || '',
                 sources: {
-                    news: document.getElementById('src-news').checked,
-                    press: document.getElementById('src-press').checked,
-                    fis: document.getElementById('src-fis').checked,
-                    state: document.getElementById('src-state').checked
+                    news:  document.getElementById('src-news')?.checked  ?? true,
+                    oparl: document.getElementById('src-oparl')?.checked ?? true,
+                    bplan: document.getElementById('src-bplan')?.checked ?? false,
+                    state: document.getElementById('src-state')?.checked ?? false,
                 },
                 threshold: document.getElementById('confidence-threshold').value,
                 targetCount: parseInt(document.getElementById('target-count').value, 10),
@@ -5224,6 +5370,7 @@
 
         function toggleSourceCard(label) {
             const input = label.querySelector('input');
+            if (input?.disabled) return;  // planned sources stay locked
             setTimeout(() => {
                 if (input.checked) {
                     label.classList.add('selected');
@@ -5232,6 +5379,51 @@
                 }
                 updateEstimate();
             }, 10);
+        }
+
+        // ===== LIVE SOURCE STATUS =====
+        async function loadSourceStatus() {
+            const bar = document.getElementById('source-status-bar');
+            const text = document.getElementById('source-status-text');
+            const newsCount = document.getElementById('src-news-count');
+            const oparlCount = document.getElementById('src-oparl-count');
+
+            if (!bar) return;
+            bar.className = 'source-status-bar';
+            if (text) text.textContent = 'Checking source caches…';
+
+            try {
+                const r = await fetch('/api/scrape/all');
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                const data = await r.json();
+                const sources = data.sources || [];
+
+                sources.forEach(s => {
+                    const span = s.source === 'news' ? newsCount
+                              : s.source === 'oparl' ? oparlCount
+                              : null;
+                    if (!span) return;
+                    if (s.available && s.count) {
+                        const when = s.cached_at ? s.cached_at.slice(0, 10) : '';
+                        span.textContent = `${s.count} cached · ${when}`;
+                        span.classList.add('live');
+                    } else {
+                        span.textContent = 'no cache yet';
+                        span.classList.remove('live');
+                    }
+                });
+
+                const total = sources.reduce((sum, s) => sum + (s.count || 0), 0);
+                if (total > 0) {
+                    bar.classList.add('ok');
+                    if (text) text.textContent = `${total} real matches cached across ${sources.filter(s => s.available && s.count).length} live source(s).`;
+                } else {
+                    if (text) text.textContent = 'No cached matches yet. Live mode will fetch on first pipeline run.';
+                }
+            } catch (e) {
+                bar.classList.add('error');
+                if (text) text.textContent = `Could not reach /api/scrape/all (${e.message}).`;
+            }
         }
 
         // ===== ESTIMATE CALCULATOR =====
@@ -5251,10 +5443,10 @@
 
             const targetCount = parseInt(targetEl.value, 10);
             const sources = {
-                news: document.getElementById('src-news')?.checked || false,
-                press: document.getElementById('src-press')?.checked || false,
-                fis: document.getElementById('src-fis')?.checked || false,
-                state: document.getElementById('src-state')?.checked || false
+                news:  document.getElementById('src-news')?.checked  || false,
+                oparl: document.getElementById('src-oparl')?.checked || false,
+                bplan: document.getElementById('src-bplan')?.checked || false,
+                state: document.getElementById('src-state')?.checked || false,
             };
 
             // Count selected regions (step 3 region cards — first 4 region checkboxes in step 3)
@@ -5263,15 +5455,16 @@
             const enabledSources = Object.values(sources).filter(Boolean).length;
 
             // ---- TIME (seconds) ----
+            // Live sources (news + oparl) drive most of the scrape time; planned sources don't yet
             const initTime = 4;
-            const newsTime = sources.news ? selectedRegions * 4 : 0;
-            const pressTime = sources.press ? selectedRegions * 7 : 0;
-            const fisTime = sources.fis ? 12 : 0;
-            const stateTime = sources.state ? selectedRegions * 5 : 0;
+            const newsTime  = sources.news  ? selectedRegions * 4  : 0;   // Google News RSS per city
+            const oparlTime = sources.oparl ? 25                   : 0;   // OParl scrape across 14 districts
+            const bplanTime = sources.bplan ? 8                    : 0;   // future WFS parse
+            const stateTime = sources.state ? selectedRegions * 5  : 0;   // future state geoportals
 
             // Scrape volume scales with target count — more projects = deeper scraping
             const scrapeMultiplier = 0.5 + (targetCount / 100);
-            const scrapeTime = Math.round((newsTime + pressTime + fisTime + stateTime) * scrapeMultiplier);
+            const scrapeTime = Math.round((newsTime + oparlTime + bplanTime + stateTime) * scrapeMultiplier);
 
             const dedupeTime = Math.max(2, Math.round(targetCount * 0.08));
 
