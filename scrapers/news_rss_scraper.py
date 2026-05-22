@@ -28,14 +28,33 @@ except (AttributeError, ValueError):
     pass
 
 
-# Search queries — combine each medical term with each target city.
-# Google News RSS interprets the q= parameter the same as a regular search.
-MEDICAL_QUERIES = [
+# Medical-building terms — what KIND of project we're looking for.
+# Quoted in the query so Google News does exact-phrase matching.
+MEDICAL_TERMS = [
     "Ärztehaus",
     "Medizinisches Versorgungszentrum",
     "Praxisklinik",
     "Gesundheitszentrum",
-    "neues Ärztezentrum",
+    "Ärztezentrum",
+]
+
+# Construction-intent terms — what STAGE / EVENT we care about.
+# Required: the article must contain at least one of these to be returned.
+# This filters out operational news (closings, political stories, existing-facility
+# coverage) at Google's index, BEFORE results reach Claude for qualification.
+#
+# We exclude vague terms like "Eröffnung" (opening) and "Investor" because those
+# match too many articles about existing spaces. We include only terms that
+# strongly signal NEW construction or planning.
+CONSTRUCTION_INTENT_TERMS = [
+    "Neubau",
+    "geplant",
+    "Bauvorhaben",
+    "entsteht",
+    "errichtet",
+    "Baugenehmigung",
+    "Grundsteinlegung",
+    "Bauantrag",
 ]
 
 TARGET_CITIES = [
@@ -47,6 +66,20 @@ TARGET_CITIES = [
     "Leipzig",
     "Dresden",
 ]
+
+
+def build_search_query(medical_term: str, city: str) -> str:
+    """
+    Compose a Google-News-syntax query that demands BOTH:
+      • the medical term (exact phrase)
+      • the city (anywhere)
+      • at least one construction-intent term (anywhere)
+
+    Returns something like:
+        "Ärztehaus" Berlin (Neubau OR geplant OR Bauvorhaben OR entsteht OR ...)
+    """
+    construction_block = " OR ".join(CONSTRUCTION_INTENT_TERMS)
+    return f'"{medical_term}" {city} ({construction_block})'
 
 
 @dataclass
@@ -146,33 +179,43 @@ def _parse_google_news_rss(xml_text: str, city: str, query: str) -> list[NewsIte
 # ---------------------------------------------------------------------------
 def scrape_news(
     cities: list[str] = TARGET_CITIES,
-    queries: list[str] = MEDICAL_QUERIES,
-    max_items_per_query: int = 10,
+    terms: list[str] = MEDICAL_TERMS,
+    max_items_per_query: int = 15,
 ) -> list[dict]:
     """
-    Run all (city × query) combinations, deduplicate by URL, return as project dicts.
-    Google News doesn't accept a date range in RSS, but results are sorted by recency.
+    Run all (city × medical-term) combinations as construction-intent-filtered queries.
+
+    Each Google News search demands BOTH a medical term AND at least one
+    construction-intent term (Neubau/geplant/Bauvorhaben/etc.). This shifts the
+    signal-to-noise ratio dramatically — we trade away articles about operational
+    medical news (closings, political coverage, existing-facility stories) and
+    keep only articles about NEW BUILDING DEVELOPMENT.
+
+    Trade-off:
+      • Previous (broad) version returned ~284 items, most operational noise.
+      • This (intent-filtered) version returns far fewer items, most actually relevant.
     """
     all_items: list[NewsItem] = []
     seen_links: set[str] = set()
-    total_queries = len(cities) * len(queries)
+    total_queries = len(cities) * len(terms)
     completed = 0
 
-    print(f"Google News RSS — running {total_queries} (city × query) searches\n")
+    print(f"Google News RSS — running {total_queries} construction-intent searches")
+    print(f"  Each query: \"<medical term>\" <city> ({' OR '.join(CONSTRUCTION_INTENT_TERMS[:3])} ...)\n")
 
     for city in cities:
-        for query in queries:
+        for term in terms:
             completed += 1
-            full_query = f"{query} {city}"
+            full_query = build_search_query(term, city)
             url = (
                 f"https://news.google.com/rss/search"
                 f"?q={quote(full_query)}&hl=de&gl=DE&ceid=DE:de"
             )
-            print(f"[{completed}/{total_queries}] {full_query}")
+            print(f"[{completed}/{total_queries}] {term} + {city}")
             xml_text = _fetch_rss(url)
             if not xml_text:
                 continue
-            items = _parse_google_news_rss(xml_text, city=city, query=query)[:max_items_per_query]
+            items = _parse_google_news_rss(xml_text, city=city, query=term)[:max_items_per_query]
             added = 0
             for item in items:
                 if item.link in seen_links:
