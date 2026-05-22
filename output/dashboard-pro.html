@@ -6296,72 +6296,87 @@
             `;
         }
 
+        // Deterministic per-lead jitter so multiple leads in the same city spread out visibly.
+        // Uses golden-angle spiral so points distribute evenly even with many leads per city.
+        function jitterForIndex(baseCoords, index, totalInCity) {
+            if (totalInCity <= 1) return baseCoords;
+            const GOLDEN = 137.50776405003785;          // degrees
+            const angle = (index * GOLDEN) % 360 * Math.PI / 180;
+            // Spiral radius grows with index; capped so we don't drift outside the city
+            const radius = 0.004 + Math.sqrt(index) * 0.0035;  // ~400m start, expanding
+            return [
+                baseCoords[0] + Math.cos(angle) * radius,
+                baseCoords[1] + Math.sin(angle) * radius,
+            ];
+        }
+
         function renderMap() {
             mapMarkers.forEach(m => map.removeLayer(m));
             mapMarkers = [];
             cityMarkers = {};
 
             const projects = filteredProjects();
-            const byCity = {};
+            // Group by city to compute jitter index within each
+            const cityIndex = {};
+            const cityTotal = {};
             projects.forEach(p => {
-                (byCity[p.City] = byCity[p.City] || []).push(p);
+                cityTotal[p.City] = (cityTotal[p.City] || 0) + 1;
             });
 
             const bounds = [];
             let delay = 0;
 
-            Object.entries(byCity).forEach(([city, items]) => {
-                if (!cityCoordinates[city]) return;
+            projects.forEach((p, globalIdx) => {
+                const baseCoords = cityCoordinates[p.City];
+                if (!baseCoords) return;  // skip unknown cities
 
-                // Best quality for this city (high beats medium beats low)
-                const bestQuality = items.reduce((b, p) => {
-                    const o = { high: 1, medium: 2, low: 3 };
-                    return o[p['Lead Quality']] < o[b['Lead Quality']] ? p : b;
-                });
-                const color = qualityColors[bestQuality['Lead Quality']];
-                const count = items.length;
+                const idxInCity = (cityIndex[p.City] = (cityIndex[p.City] ?? -1) + 1);
+                const coords = jitterForIndex(baseCoords, idxInCity, cityTotal[p.City]);
 
-                const w = count >= 10 ? 40 : count >= 3 ? 36 : 32;
+                const quality = p['Lead Quality'];
+                const color = qualityColors[quality];
+                const w = 26;   // smaller than the old cluster pins
                 const h = Math.round(w * 1.25);
-
-                const animDelay = delay;
-                delay += 50;
+                const animDelay = Math.min(delay, 800);
+                delay += 12;    // tighter stagger so it doesn't take forever with 50+ pins
 
                 const icon = L.divIcon({
                     className: '',
-                    html: `<div class="map-pin entrance" style="animation-delay:${animDelay}ms;">
-                            ${buildPinSVG(color, count)}
-                            ${count > 1 ? `<span class="map-pin-label">${count}</span>` : ''}
-                          </div>`,
+                    html: `<div class="map-pin entrance" style="animation-delay:${animDelay}ms;">${buildPinSVG(color, 1)}</div>`,
                     iconSize: [w, h],
-                    iconAnchor: [w/2, h],   // anchor at the tip of the pin
-                    popupAnchor: [0, -h + 4]
+                    iconAnchor: [w / 2, h],
+                    popupAnchor: [0, -h + 4],
                 });
 
-                const marker = L.marker(cityCoordinates[city], { icon, riseOnHover: true })
-                    .bindPopup(buildPopupHtml(city, items), { closeButton: true, autoPan: true, maxWidth: 340 })
+                const marker = L.marker(coords, { icon, riseOnHover: true })
+                    .bindPopup(buildSingleLeadPopupHtml(p), { closeButton: true, autoPan: true, maxWidth: 320 })
                     .addTo(map);
 
-                // Stash the icon element so we can toggle .selected class
                 marker.on('add', () => { marker._iconEl = marker.getElement()?.querySelector('.map-pin'); });
                 if (marker.getElement()) marker._iconEl = marker.getElement().querySelector('.map-pin');
 
+                marker._projectIndex = allProjects.indexOf(p);
+                marker._city = p.City;
+
                 marker.on('click', () => {
-                    selectedCity = city;
-                    Object.values(cityMarkers).forEach(m => m._iconEl?.classList.remove('selected'));
+                    // Highlight this marker, clear others
+                    mapMarkers.forEach(m => m._iconEl?.classList.remove('selected'));
                     marker._iconEl?.classList.add('selected');
+                    selectedCity = p.City;
                 });
 
-                cityMarkers[city] = marker;
+                // Index by city for the existing list-click pan/highlight behaviour
+                if (!cityMarkers[p.City]) cityMarkers[p.City] = marker;
+
                 mapMarkers.push(marker);
-                bounds.push(cityCoordinates[city]);
+                bounds.push(coords);
             });
 
-            // Auto-fit map to the data (with padding) only on the first render or after view switch
+            // Auto-fit map to all the new pins (only on first render after data load)
             if (bounds.length > 0) {
                 const isFirstFit = !window.mapFittedOnce;
                 if (isFirstFit || !window.mapUserHasInteracted) {
-                    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 9, animate: true, duration: 0.6 });
+                    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 11, animate: true, duration: 0.6 });
                     window.mapFittedOnce = true;
                 }
             }
@@ -6370,6 +6385,37 @@
             if (selectedCity && cityMarkers[selectedCity]) {
                 setTimeout(() => cityMarkers[selectedCity]._iconEl?.classList.add('selected'), 50);
             }
+        }
+
+        // Lightweight per-lead popup (used now that we have one marker per lead)
+        function buildSingleLeadPopupHtml(p) {
+            const q = p['Lead Quality'];
+            const idx = allProjects.indexOf(p);
+            const sourceKind = (p['Source'] || '').includes('OParl') ? 'oparl'
+                            : (p['Source'] || '').includes('News') ? 'news' : '';
+            return `
+                <div class="map-popup-header">
+                    <div class="map-popup-city">${escapeHtml(p['Name'].substring(0, 60))}${p['Name'].length > 60 ? '…' : ''}</div>
+                    <div class="map-popup-count">
+                        <span>${escapeHtml(p['City'])}</span>
+                        <span class="map-popup-count-pill ${q}">${q} · ${p['Confidence (%)']}%</span>
+                    </div>
+                </div>
+                <div class="map-popup-body">
+                    <a class="map-popup-item" onclick="event.preventDefault(); showProject(${idx});">
+                        <div class="map-popup-item-stripe ${q}"></div>
+                        <div class="map-popup-item-body">
+                            <div class="map-popup-item-meta">
+                                <span class="map-popup-item-quality ${q}">View full details</span>
+                                <span class="map-popup-item-confidence">${escapeHtml(p['Source'] || '')}</span>
+                            </div>
+                        </div>
+                        <div class="map-popup-item-arrow">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </div>
+                    </a>
+                </div>
+            `;
         }
 
         function toggleFilter(quality) {
