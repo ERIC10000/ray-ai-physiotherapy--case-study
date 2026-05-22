@@ -2346,12 +2346,72 @@
             margin-bottom: 12px;
         }
 
-        .modal-map {
-            width: 100%;
-            height: 280px;
+        .modal-map-wrap {
+            position: relative;
             border-radius: var(--radius-lg);
             border: 1px solid var(--gray-200);
             overflow: hidden;
+            background: var(--gray-100);
+        }
+
+        .modal-map {
+            width: 100%;
+            height: 280px;
+        }
+
+        .modal-map-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 500;
+            display: inline-flex;
+            gap: 0;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 2px;
+            box-shadow: var(--shadow);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mini-style-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: transparent;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .mini-style-btn:hover:not(.active) {
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
+        .mini-style-btn.active {
+            background: var(--gray-900);
+            color: white;
+        }
+
+        .mini-style-btn svg {
+            width: 11px;
+            height: 11px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-map { height: 220px; }
+            .mini-style-btn {
+                padding: 4px 8px;
+                font-size: 10.5px;
+            }
+            .mini-style-btn svg { display: none; }
         }
 
         .detail-grid {
@@ -4786,7 +4846,23 @@
             <div class="modal-body">
                 <div class="modal-section">
                     <div class="modal-section-title">📍 Location Preview</div>
-                    <iframe class="modal-map" id="modal-map" frameborder="0"></iframe>
+                    <div class="modal-map-wrap">
+                        <div class="modal-map-toggle" role="tablist" aria-label="Map style">
+                            <button type="button" class="mini-style-btn active" data-modal-style="light" onclick="setModalMapStyle('light')" role="tab">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                Map
+                            </button>
+                            <button type="button" class="mini-style-btn" data-modal-style="streets" onclick="setModalMapStyle('streets')" role="tab">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                Streets
+                            </button>
+                            <button type="button" class="mini-style-btn" data-modal-style="satellite" onclick="setModalMapStyle('satellite')" role="tab">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Satellite
+                            </button>
+                        </div>
+                        <div class="modal-map" id="modal-map-container"></div>
+                    </div>
                 </div>
                 <div class="modal-section">
                     <div class="modal-section-title">📊 Project Details</div>
@@ -6462,9 +6538,7 @@
 
             const coords = cityCoordinates[p.City];
             if (coords) {
-                const [lat, lng] = coords;
-                const bbox = `${lng-0.05},${lat-0.03},${lng+0.05},${lat+0.03}`;
-                document.getElementById('modal-map').src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+                renderModalMap(coords, p);
             }
 
             document.getElementById('modal-details').innerHTML = `
@@ -6539,7 +6613,84 @@
 
         function closeModal() {
             document.getElementById('modal-backdrop').classList.remove('active');
-            document.getElementById('modal-map').src = 'about:blank';
+            // No need to clear the modal map — it stays initialized for the next open
+        }
+
+        // ===== MODAL LOCATION-PREVIEW MAP =====
+        let modalMap = null;
+        let modalTileLayers = {};
+        let currentModalStyle = 'light';
+        let modalMarker = null;
+
+        function initModalMap() {
+            if (modalMap) return;
+
+            modalMap = L.map('modal-map-container', {
+                zoomControl: true,
+                attributionControl: true,
+                scrollWheelZoom: false,    // avoid scroll hijacking inside a modal
+            }).setView([52.52, 13.405], 12);
+
+            const tileOpts = {
+                crossOrigin: true,
+                keepBuffer: 4,
+                updateWhenIdle: false,
+                updateWhenZooming: false,
+            };
+
+            modalTileLayers.light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                ...tileOpts, attribution: '© OpenStreetMap · © CartoDB', maxZoom: 19, subdomains: 'abcd',
+            });
+            modalTileLayers.streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                ...tileOpts, attribution: '© OpenStreetMap contributors', maxZoom: 19,
+            });
+            modalTileLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                ...tileOpts, attribution: 'Tiles © Esri', maxZoom: 19, maxNativeZoom: 18, keepBuffer: 6,
+            });
+            modalTileLayers.light.addTo(modalMap);
+            modalTileLayers.light.setZIndex(1);
+        }
+
+        function setModalMapStyle(style) {
+            if (!modalMap || !modalTileLayers[style] || style === currentModalStyle) return;
+
+            if (!modalMap.hasLayer(modalTileLayers[style])) {
+                modalTileLayers[style].addTo(modalMap);
+            }
+            modalTileLayers[style].setZIndex(2);
+            modalTileLayers[style].setOpacity(1);
+            modalTileLayers[currentModalStyle].setZIndex(1);
+            modalTileLayers[currentModalStyle].setOpacity(0);
+
+            currentModalStyle = style;
+            document.querySelectorAll('.mini-style-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.modalStyle === style);
+            });
+        }
+
+        function renderModalMap(coords, project) {
+            initModalMap();
+
+            const [lat, lng] = coords;
+            modalMap.setView([lat, lng], 12);
+
+            // Replace marker each time so it reflects the selected lead
+            if (modalMarker) {
+                modalMap.removeLayer(modalMarker);
+                modalMarker = null;
+            }
+            const quality = project['Lead Quality'];
+            const color = qualityColors[quality];
+            const icon = L.divIcon({
+                className: '',
+                html: `<div class="map-pin">${buildPinSVG(color, 1)}</div>`,
+                iconSize: [28, 35],
+                iconAnchor: [14, 35],
+            });
+            modalMarker = L.marker([lat, lng], { icon }).addTo(modalMap);
+
+            // Modal animates open; Leaflet needs invalidateSize after it's fully visible
+            setTimeout(() => modalMap && modalMap.invalidateSize(), 320);
         }
 
         // ===== TOAST =====
