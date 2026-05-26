@@ -195,13 +195,59 @@ def geocode_with_nominatim(query: str) -> dict:
     return result
 
 
+def _enforce_verifiability_score(quality: str, confidence: int, precision: str) -> tuple[str, int, str]:
+    """
+    Enforce that lead quality reflects how verifiable the location is.
+
+    For a real-estate discovery tool, a "high-quality" lead is useless if we
+    can't pin it on a map. We therefore CAP both quality and confidence based
+    on Nominatim's precision level.
+
+        precision           max quality   max confidence   note
+        ───────────────     ───────────   ──────────────   ───────────────────
+        address             high          (no cap)         Building/street-level match
+        street              high          92               Street resolved but not exact building
+        district            medium        80               Neighbourhood-level only
+        city                low           55               City centroid only — too coarse
+        unverified          low           30               No Nominatim match at all
+
+    Returns (adjusted_quality, adjusted_confidence, cap_reason_or_empty_string).
+    """
+    qrank = {'high': 3, 'medium': 2, 'low': 1}
+    q = quality if quality in qrank else 'low'
+    c = max(0, min(100, int(confidence)))
+
+    if precision == 'address':
+        return q, c, ''
+    if precision == 'street':
+        return q, min(c, 92), ''
+    if precision == 'district':
+        new_q = 'medium' if qrank[q] > qrank['medium'] else q
+        return new_q, min(c, 80), 'capped to district-level verification'
+    if precision == 'city':
+        return 'low', min(c, 55), 'capped — only city centroid match'
+    # 'unverified' or anything else
+    return 'low', min(c, 30), 'capped — no verifiable location'
+
+
 def _to_qualification_dict(name, city, source, url, description, parsed):
-    """Convert parsed JSON into the dashboard's expected lead shape, geocoding the extracted location."""
+    """Convert parsed JSON into the dashboard's expected lead shape, geocoding + score-enforcing."""
     gf = parsed.get('ground_floor_available')
     acc = parsed.get('accessibility_noted')
 
     extracted_location = parsed.get('extracted_location') or ''
     geo = geocode_with_nominatim(extracted_location) if extracted_location else {'verified': False, 'reason': 'no location extracted'}
+
+    # ---- Enforce verifiability-based scoring ----
+    raw_quality = parsed.get('lead_quality', 'low')
+    raw_confidence = int(parsed.get('confidence', 0))
+    precision = geo.get('precision', 'unverified')
+    adj_quality, adj_confidence, cap_reason = _enforce_verifiability_score(raw_quality, raw_confidence, precision)
+
+    # Append capping note to reasoning so it's visible to the user
+    reasoning = parsed.get('reasoning', '')
+    if cap_reason:
+        reasoning = f"{reasoning} [Score {cap_reason}]".strip()
 
     result_city = geo.get('matched_city') or city
     return {
@@ -214,19 +260,25 @@ def _to_qualification_dict(name, city, source, url, description, parsed):
         'Medical Office Building': 'Yes' if parsed.get('is_medical_office_building') else 'No',
         'Physio Suitability (1-5)': int(parsed.get('suitability_for_physio', 1)),
         'Estimated Stage': parsed.get('estimated_stage', 'unknown'),
-        'Lead Quality': parsed.get('lead_quality', 'low'),
-        'Confidence (%)': int(parsed.get('confidence', 0)),
-        'Reasoning': parsed.get('reasoning', ''),
+        # Quality + confidence are now ENFORCED by location verifiability:
+        # high requires address/street, medium requires district, anything else → low.
+        'Lead Quality': adj_quality,
+        'Confidence (%)': adj_confidence,
+        'Reasoning': reasoning,
         'Ground Floor': 'Yes' if gf else ('No' if gf is False else 'Unknown'),
         'Est. Size (sqm)': parsed.get('estimated_sqm') or 'Unknown',
         'Accessibility': 'Yes' if acc else ('No' if acc is False else 'Unknown'),
         # ----- Geographic verification fields -----
         'Extracted Location': extracted_location,
         'Geocoded Address': geo.get('display_name', ''),
-        'Geocode Precision': geo.get('precision', 'unverified'),
+        'Geocode Precision': precision,
         'Location Verified': geo.get('verified', False),
         'Latitude': geo.get('lat'),
         'Longitude': geo.get('lng'),
+        # ----- Score-adjustment transparency -----
+        'AI Quality (raw)': raw_quality,
+        'AI Confidence (raw)': raw_confidence,
+        'Score Cap Reason': cap_reason,
     }
 
 
