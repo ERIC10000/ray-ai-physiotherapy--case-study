@@ -29,13 +29,20 @@ URL: {url}
 5. **Lead quality** (high/medium/low)
 6. **Confidence** (0-100%)
 7. **Reasoning** (1-2 sentences)
-8. **EXTRACT THE PROJECT'S LOCATION** — this is critical for map accuracy:
-   - Read the title and description carefully.
-   - If a specific street address or building location is mentioned (e.g. "Müllerstraße 100, Berlin-Wedding"), return that EXACT string.
-   - If only a town/district is mentioned (e.g. "Neuenhagen bei Berlin" or "Berlin-Charlottenburg"), return that.
-   - Return the MOST SPECIFIC location you can defend from the text. NEVER invent or guess an address.
-   - The "City (from search context)" above is just a search keyword — the real project may be in a different town entirely. Trust the article text, not the search context.
-   - If no location is extractable, return null.
+8. **EXTRACT THE PROJECT'S LOCATION** — this is critical for map accuracy. Score follows location:
+   - Read the title and description carefully — look for street names, house numbers, district names, town names, postal codes.
+   - **Prefer the most specific combination of (street) + (district) + (city)** that the text supports — Nominatim resolves "Weitlingstraße, Berlin-Lichtenberg" much better than just "Berlin".
+   - If a specific street is mentioned (e.g. "Müllerstraße", "Hauptbahnhof", "Alexanderplatz"), include it.
+   - If a district is mentioned (e.g. "Berlin-Wedding", "Leipzig-Süd"), include it.
+   - If a postal code (PLZ) appears (e.g. "10115 Berlin"), include it — these geocode very precisely.
+   - Examples of good extractions (most specific first):
+       "Müllerstraße 100, 13353 Berlin-Wedding"
+       "Weitlingstraße, Berlin-Lichtenberg"
+       "Berlin-Friedrichshain"
+       "Neuenhagen bei Berlin"
+   - NEVER invent or guess an address. Only return what the text actually contains.
+   - The "City (from search context)" above is just a search keyword — the real project may be in a different town entirely. Trust the article text.
+   - If no location at all is extractable, return null.
 
 **Respond in JSON format ONLY:**
 {{
@@ -108,24 +115,21 @@ def _save_geocode_cache():
         pass
 
 
-def geocode_with_nominatim(query: str) -> dict:
-    """
-    Geocode a free-text location via Nominatim (OpenStreetMap).
-    Returns: {
-        'lat': float, 'lng': float,
-        'display_name': str, 'class': str, 'type': str,
-        'importance': float,
-        'precision': 'address'|'street'|'district'|'city'|'unverified',
-        'verified': bool,
-    }
-    or {'verified': False, 'reason': '...'} if no usable result.
+def _classify_precision(osm_class: str, osm_type: str) -> str:
+    if osm_class in ('building', 'amenity', 'shop', 'office') or osm_type in ('house', 'building'):
+        return 'address'
+    if osm_class == 'highway' or osm_type in ('road', 'street', 'residential', 'pedestrian', 'living_street'):
+        return 'street'
+    if osm_type in ('suburb', 'neighbourhood', 'quarter', 'borough', 'city_district', 'hamlet'):
+        return 'district'
+    if osm_type in ('city', 'town', 'village', 'municipality'):
+        return 'city'
+    return 'unverified'
 
-    Respects Nominatim's 1-req-per-second rate limit. Cached aggressively.
-    """
+
+def _nominatim_request(query: str) -> dict:
+    """Single Nominatim call. Cached on disk."""
     import time, requests
-    if not query or not isinstance(query, str):
-        return {'verified': False, 'reason': 'empty query'}
-
     key = query.strip().lower()
     cache = _load_geocode_cache()
     if key in cache:
@@ -143,8 +147,7 @@ def geocode_with_nominatim(query: str) -> dict:
         'addressdetails': '1',
     }
     try:
-        # Polite rate-limiting — Nominatim TOS asks for max 1 req/sec
-        time.sleep(1.0)
+        time.sleep(1.0)  # Nominatim TOS: max 1 req/sec
         r = requests.get('https://nominatim.openstreetmap.org/search', params=params, headers=headers, timeout=10)
         r.raise_for_status()
         results = r.json()
@@ -164,19 +167,7 @@ def geocode_with_nominatim(query: str) -> dict:
     addr = top.get('address') or {}
     osm_class = top.get('class', '')
     osm_type = top.get('type', '')
-    importance = float(top.get('importance', 0) or 0)
-
-    # Classify precision based on what OSM matched
-    if osm_class in ('building', 'amenity', 'shop', 'office') or osm_type in ('house', 'building'):
-        precision = 'address'
-    elif osm_class == 'highway' or osm_type in ('road', 'street', 'residential'):
-        precision = 'street'
-    elif osm_type in ('suburb', 'neighbourhood', 'quarter', 'borough', 'city_district'):
-        precision = 'district'
-    elif osm_type in ('city', 'town', 'village', 'municipality'):
-        precision = 'city'
-    else:
-        precision = 'unverified'
+    precision = _classify_precision(osm_class, osm_type)
 
     result = {
         'verified': precision in ('address', 'street', 'district'),
@@ -186,30 +177,76 @@ def geocode_with_nominatim(query: str) -> dict:
         'display_name': top.get('display_name', ''),
         'class': osm_class,
         'type': osm_type,
-        'importance': importance,
+        'importance': float(top.get('importance', 0) or 0),
         'matched_city': addr.get('city') or addr.get('town') or addr.get('village') or addr.get('municipality') or '',
         'matched_state': addr.get('state') or '',
+        'query_used': query,
     }
     cache[key] = result
     _save_geocode_cache()
     return result
 
 
+# Precision tier ordering (higher = more precise)
+_PRECISION_RANK = {'address': 4, 'street': 3, 'district': 2, 'city': 1, 'unverified': 0}
+
+
+def geocode_with_nominatim(query: str, fallback_city: str = '') -> dict:
+    """
+    Geocode a free-text location via Nominatim, trying multiple query variants
+    and keeping the most precise result.
+
+    Strategy:
+      1. Try the query as-is (best case: street + district + city resolved together).
+      2. If that returns only city-level, AND fallback_city was provided, try query + city.
+      3. If query contains commas, also try just the first segment (often the street/district).
+
+    Returns the highest-precision result found.
+    """
+    if not query or not isinstance(query, str):
+        return {'verified': False, 'reason': 'empty query'}
+
+    best = _nominatim_request(query)
+    best_rank = _PRECISION_RANK.get(best.get('precision', 'unverified'), 0)
+
+    # If we resolved at street/address level, no need to try more
+    if best_rank >= 3:
+        return best
+
+    # Variant A: append a city hint if not already present
+    if fallback_city and fallback_city.lower() not in query.lower():
+        variant = f"{query}, {fallback_city}"
+        alt = _nominatim_request(variant)
+        if _PRECISION_RANK.get(alt.get('precision', 'unverified'), 0) > best_rank:
+            best = alt
+            best_rank = _PRECISION_RANK[alt['precision']]
+
+    # Variant B: first segment of a comma-separated query (often the most specific bit)
+    if ',' in query:
+        first = query.split(',', 1)[0].strip()
+        if first and first.lower() != query.lower():
+            alt = _nominatim_request(first)
+            if _PRECISION_RANK.get(alt.get('precision', 'unverified'), 0) > best_rank:
+                best = alt
+                best_rank = _PRECISION_RANK[alt['precision']]
+
+    return best
+
+
 def _enforce_verifiability_score(quality: str, confidence: int, precision: str) -> tuple[str, int, str]:
     """
-    Enforce that lead quality reflects how verifiable the location is.
-
-    For a real-estate discovery tool, a "high-quality" lead is useless if we
-    can't pin it on a map. We therefore CAP both quality and confidence based
-    on Nominatim's precision level.
+    Enforce that lead quality reflects how verifiable the location is, but allow
+    HIGH quality at district level (Berlin-Wedding, Leipzig-Süd etc. are
+    legitimately actionable). Only city-centroid and unverified locations get
+    materially downgraded.
 
         precision           max quality   max confidence   note
         ───────────────     ───────────   ──────────────   ───────────────────
-        address             high          (no cap)         Building/street-level match
-        street              high          92               Street resolved but not exact building
-        district            medium        80               Neighbourhood-level only
-        city                low           55               City centroid only — too coarse
-        unverified          low           30               No Nominatim match at all
+        address             high          (no cap)         Exact building / house number
+        street              high          (no cap)         Road-level — very actionable
+        district            high          92               Neighbourhood-level — actionable
+        city                medium        70               Only city centroid — approximate
+        unverified          low           40               No Nominatim match
 
     Returns (adjusted_quality, adjusted_confidence, cap_reason_or_empty_string).
     """
@@ -220,14 +257,16 @@ def _enforce_verifiability_score(quality: str, confidence: int, precision: str) 
     if precision == 'address':
         return q, c, ''
     if precision == 'street':
-        return q, min(c, 92), ''
+        return q, c, ''
     if precision == 'district':
-        new_q = 'medium' if qrank[q] > qrank['medium'] else q
-        return new_q, min(c, 80), 'capped to district-level verification'
+        # Keep quality; only mildly cap confidence
+        return q, min(c, 92), ''
     if precision == 'city':
-        return 'low', min(c, 55), 'capped — only city centroid match'
+        # Honest downgrade: city-only is approximate, not actionable enough for "high"
+        new_q = 'medium' if qrank[q] >= qrank['medium'] else q
+        return new_q, min(c, 70), 'capped to medium — location only resolved to city centroid'
     # 'unverified' or anything else
-    return 'low', min(c, 30), 'capped — no verifiable location'
+    return 'low', min(c, 40), 'capped to low — no verifiable location'
 
 
 def _to_qualification_dict(name, city, source, url, description, parsed):
@@ -236,7 +275,9 @@ def _to_qualification_dict(name, city, source, url, description, parsed):
     acc = parsed.get('accessibility_noted')
 
     extracted_location = parsed.get('extracted_location') or ''
-    geo = geocode_with_nominatim(extracted_location) if extracted_location else {'verified': False, 'reason': 'no location extracted'}
+    # Pass the search-context city as a fallback hint — geocoder will only use it
+    # if the primary query returns a too-coarse result.
+    geo = geocode_with_nominatim(extracted_location, fallback_city=city) if extracted_location else {'verified': False, 'reason': 'no location extracted'}
 
     # ---- Enforce verifiability-based scoring ----
     raw_quality = parsed.get('lead_quality', 'low')

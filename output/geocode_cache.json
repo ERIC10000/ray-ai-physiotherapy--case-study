@@ -1,0 +1,394 @@
+{
+  "neuenhagen": {
+    "verified": false,
+    "precision": "city",
+    "lat": 53.7467873,
+    "lng": 13.1115253,
+    "display_name": "Neuenhagen, Altenhagen, Treptower Tollensewinkel, Mecklenburgische Seenplatte, Mecklenburg-Vorpommern, 17091, Deutschland",
+    "class": "place",
+    "type": "village",
+    "importance": 0.4789903552801327,
+    "matched_city": "Neuenhagen",
+    "matched_state": "Mecklenburg-Vorpommern"
+  },
+  "berlin-reinickendorf": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.6048469,
+    "lng": 13.2881415,
+    "display_name": "Berlin-Reinickendorf, Deutschland",
+    "class": "boundary",
+    "type": "political",
+    "importance": 0.06675542153047989,
+    "matched_city": "",
+    "matched_state": ""
+  },
+  "moabit, berlin-mitte": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5301017,
+    "lng": 13.3425422,
+    "display_name": "Moabit, Mitte, Berlin, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.5072243705571725,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "berlin-friedrichshain-kreuzberg": {
+    "verified": false,
+    "reason": "ConnectTimeout: HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Max retries exceeded with url: /search?q=Berlin-Friedrichshain-Kreuzberg&format=json&limit=1&countrycodes=de&addressdetails=1 (Caused by ConnectTimeoutError(<HTTPSConnection(host='nominatim.openstreetmap.org', port=443) at 0x1e580903d90>, 'Connection to nominatim.openstreetmap.org timed out. (connect timeout=10)'))"
+  },
+  "altlandsberg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5614869,
+    "lng": 13.7245542,
+    "display_name": "Altlandsberg, Märkisch-Oderland, Brandenburg, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4649305141887719,
+    "matched_city": "Altlandsberg",
+    "matched_state": "Brandenburg"
+  },
+  "nordpromenade, fördergebiet greifswalder straße, berlin": {
+    "verified": false,
+    "reason": "no nominatim match"
+  },
+  "berlin-moabit": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5346789,
+    "lng": 13.3344781,
+    "display_name": "Berlin-Moabit, Erna-Samuel-Straße, Arminiuskiez, Moabit, Mitte, Berlin, 10551, Deutschland",
+    "class": "railway",
+    "type": "yard",
+    "importance": 0.2507397701059262,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "neuenhagen bei berlin": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5261884,
+    "lng": 13.6889259,
+    "display_name": "Neuenhagen bei Berlin, Märkisch-Oderland, Brandenburg, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.448964384003649,
+    "matched_city": "Neuenhagen bei Berlin",
+    "matched_state": "Brandenburg"
+  },
+  "friedland, landkreis oder-spree": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.1054476,
+    "lng": 14.2641178,
+    "display_name": "Friedland, Oder-Spree, Brandenburg, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4411298310162916,
+    "matched_city": "Friedland",
+    "matched_state": "Brandenburg"
+  },
+  "hebertshausen": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 48.2896469,
+    "lng": 11.4695694,
+    "display_name": "Hebertshausen, Landkreis Dachau, Bayern, 85241, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.39106112740783944,
+    "matched_city": "Hebertshausen",
+    "matched_state": "Bayern"
+  },
+  "galileistraße 31, berlin-plänterwald": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.480583,
+    "lng": 13.4787796,
+    "display_name": "Ärztehaus, 31, Galileistraße, Plänterwald, Treptow-Köpenick, Berlin, 12435, Deutschland",
+    "class": "healthcare",
+    "type": "centre",
+    "importance": 8.875486381318407e-05,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "berlin-wilhelmstadt": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5189172,
+    "lng": 13.1973459,
+    "display_name": "Wilhelmstadt, Spandau, Berlin, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.43398728502681116,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "bayern": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 48.9467562,
+    "lng": 11.4038717,
+    "display_name": "Bayern, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.7882705725399922,
+    "matched_city": "",
+    "matched_state": "Bayern"
+  },
+  "frankenthal": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 49.5353466,
+    "lng": 8.3541391,
+    "display_name": "Frankenthal (Pfalz), Rheinland-Pfalz, 67227, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.5430998267810145,
+    "matched_city": "Frankenthal (Pfalz)",
+    "matched_state": "Rheinland-Pfalz"
+  },
+  "aldekerk": {
+    "verified": false,
+    "precision": "city",
+    "lat": 51.4391499,
+    "lng": 6.4165992,
+    "display_name": "Aldekerk, Kerken, Kreis Kleve, Nordrhein-Westfalen, 47647, Deutschland",
+    "class": "place",
+    "type": "village",
+    "importance": 0.4093142170089203,
+    "matched_city": "Aldekerk",
+    "matched_state": "Nordrhein-Westfalen"
+  },
+  "ratzeburg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 53.7011061,
+    "lng": 10.774288,
+    "display_name": "Ratzeburg, Kreis Herzogtum Lauenburg, Schleswig-Holstein, 23909, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.5426557099410542,
+    "matched_city": "Ratzeburg",
+    "matched_state": "Schleswig-Holstein"
+  },
+  "schönefeld, berlin": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.36593,
+    "lng": 13.488641,
+    "display_name": "Flughafen Berlin Brandenburg, Schmiedeweg, Waltersdorf, Schönefeld, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 12529, Deutschland",
+    "class": "aeroway",
+    "type": "aerodrome",
+    "importance": 0.5275989247347139,
+    "matched_city": "Schönefeld",
+    "matched_state": "Brandenburg"
+  },
+  "bamberg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 49.8916044,
+    "lng": 10.8868478,
+    "display_name": "Bamberg, Bayern, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.6347429973953815,
+    "matched_city": "Bamberg",
+    "matched_state": "Bayern"
+  },
+  "fürstenberg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 51.7311597,
+    "lng": 9.4028388,
+    "display_name": "Fürstenberg, Samtgemeinde Boffzen, Landkreis Holzminden, Niedersachsen, 37699, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4210857630196239,
+    "matched_city": "Fürstenberg",
+    "matched_state": "Niedersachsen"
+  },
+  "berlin": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5173885,
+    "lng": 13.3951309,
+    "display_name": "Berlin, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.8522196536088086,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "jakobstraße, bayreuth": {
+    "verified": true,
+    "precision": "street",
+    "lat": 49.928586,
+    "lng": 11.5553476,
+    "display_name": "Jakobstraße, Lerchenbühl, Jakobshof, Lerchenbühl, Glocke, Saas, Bayreuth, Bayern, 95447, Deutschland",
+    "class": "highway",
+    "type": "unclassified",
+    "importance": 0.0534012947280079,
+    "matched_city": "Bayreuth",
+    "matched_state": "Bayern"
+  },
+  "grünstadt": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 49.5699652,
+    "lng": 8.1723816,
+    "display_name": "Grünstadt, Landkreis Bad Dürkheim, Rheinland-Pfalz, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.48915429319768694,
+    "matched_city": "Grünstadt",
+    "matched_state": "Rheinland-Pfalz"
+  },
+  "senftenberg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 51.519201,
+    "lng": 14.0046541,
+    "display_name": "Senftenberg - Zły Komorow, Oberspreewald-Lausitz - Górne Błota-Łužyca, Brandenburg, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.501726674596231,
+    "matched_city": "Senftenberg - Zły Komorow",
+    "matched_state": "Brandenburg"
+  },
+  "spremberg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 51.5714513,
+    "lng": 14.3804302,
+    "display_name": "Spremberg, Spree-Neiße - Sprjewja-Nysa, Brandenburg, 03130, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4883650146534129,
+    "matched_city": "Spremberg",
+    "matched_state": "Brandenburg"
+  },
+  "berlin-weißensee": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5546193,
+    "lng": 13.4630018,
+    "display_name": "Weißensee, Pankow, Berlin, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.49204109369650734,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "eifel region (trierer mutterhaus)": {
+    "verified": false,
+    "reason": "no nominatim match"
+  },
+  "angermünde, bahnhof (train station)": {
+    "verified": false,
+    "reason": "no nominatim match"
+  },
+  "starnberger see": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 47.9092703,
+    "lng": 11.3083626,
+    "display_name": "Starnberger See, Seeshaupt (VGem), Landkreis Starnberg, Bayern, Deutschland",
+    "class": "water",
+    "type": "lake",
+    "importance": 0.4974588880183972,
+    "matched_city": "Starnberger See",
+    "matched_state": "Bayern"
+  },
+  "vogelsdorf bei strausberg": {
+    "verified": false,
+    "reason": "no nominatim match"
+  },
+  "vogelsdorf": {
+    "verified": false,
+    "precision": "city",
+    "lat": 52.5076938,
+    "lng": 13.7601248,
+    "display_name": "Vogelsdorf, Fredersdorf-Vogelsdorf, Märkisch-Oderland, Brandenburg, 15370, Deutschland",
+    "class": "place",
+    "type": "village",
+    "importance": 0.44289476768746855,
+    "matched_city": "Vogelsdorf",
+    "matched_state": "Brandenburg"
+  },
+  "johannisplatz, leipzig": {
+    "verified": false,
+    "reason": "ConnectTimeout: HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Max retries exceeded with url: /search?q=Johannisplatz%2C+Leipzig&format=json&limit=1&countrycodes=de&addressdetails=1 (Caused by ConnectTimeoutError(<HTTPSConnection(host='nominatim.openstreetmap.org', port=443) at 0x1e583657390>, 'Connection to nominatim.openstreetmap.org timed out. (connect timeout=10)'))"
+  },
+  "bad oeynhausen": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.2014399,
+    "lng": 8.7981244,
+    "display_name": "Bad Oeynhausen, Kreis Minden-Lübbecke, Nordrhein-Westfalen, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.5093443514836857,
+    "matched_city": "Bad Oeynhausen",
+    "matched_state": "Nordrhein-Westfalen"
+  },
+  "hellersdorf, berlin": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.5366956,
+    "lng": 13.6048728,
+    "display_name": "Hellersdorf, Marzahn-Hellersdorf, Berlin, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4573721351816049,
+    "matched_city": "Berlin",
+    "matched_state": ""
+  },
+  "bachwiesen, stadt zürich": {
+    "verified": false,
+    "reason": "no nominatim match"
+  },
+  "annweiler": {
+    "verified": false,
+    "reason": "ConnectTimeout: HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Max retries exceeded with url: /search?q=Annweiler&format=json&limit=1&countrycodes=de&addressdetails=1 (Caused by ConnectTimeoutError(<HTTPSConnection(host='nominatim.openstreetmap.org', port=443) at 0x1e580960690>, 'Connection to nominatim.openstreetmap.org timed out. (connect timeout=10)'))"
+  },
+  "burg bei magdeburg": {
+    "verified": false,
+    "precision": "unverified",
+    "lat": 52.2705632,
+    "lng": 11.8588198,
+    "display_name": "Burg, Jerichower Land, Sachsen-Anhalt, 39288, Deutschland",
+    "class": "boundary",
+    "type": "administrative",
+    "importance": 0.4866172934014507,
+    "matched_city": "Burg",
+    "matched_state": "Sachsen-Anhalt"
+  },
+  "gorbitz, dresden": {
+    "verified": true,
+    "precision": "address",
+    "lat": 51.045189,
+    "lng": 13.6716625,
+    "display_name": "Gorbitz, Höhenpromenade, Gorbitz-Ost, Gorbitz, Cotta, Dresden, Sachsen, 01169, Deutschland",
+    "class": "amenity",
+    "type": "vending_machine",
+    "importance": 0.37441119788714866,
+    "matched_city": "Dresden",
+    "matched_state": "Sachsen"
+  },
+  "grimberg 3/4": {
+    "verified": false,
+    "precision": "city",
+    "lat": 50.8591426,
+    "lng": 7.2593431,
+    "display_name": "Grimberg, Lohmar, Rhein-Sieg-Kreis, Nordrhein-Westfalen, 53797, Deutschland",
+    "class": "place",
+    "type": "village",
+    "importance": 0.324096928576472,
+    "matched_city": "Lohmar",
+    "matched_state": "Nordrhein-Westfalen"
+  }
+}
