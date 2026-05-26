@@ -16,14 +16,12 @@ Analyze this medical/healthcare building project and provide a structured qualif
 
 **Project Information:**
 Name: {name}
-City: {city}
+City (from search context): {city}
 Source: {source}
 Description: {description}
 URL: {url}
 
 **Your Task:**
-Qualify this project against these criteria:
-
 1. **Is this a healthcare/medical building?** (not hospital, not residential, not generic commercial)
 2. **Is it specifically a medical office building (Ärztehaus) or similar?**
 3. **Suitability for physiotherapy** (1-5 scale): ground floor, size 250-450 sqm, accessibility, location quality
@@ -31,6 +29,13 @@ Qualify this project against these criteria:
 5. **Lead quality** (high/medium/low)
 6. **Confidence** (0-100%)
 7. **Reasoning** (1-2 sentences)
+8. **EXTRACT THE PROJECT'S LOCATION** — this is critical for map accuracy:
+   - Read the title and description carefully.
+   - If a specific street address or building location is mentioned (e.g. "Müllerstraße 100, Berlin-Wedding"), return that EXACT string.
+   - If only a town/district is mentioned (e.g. "Neuenhagen bei Berlin" or "Berlin-Charlottenburg"), return that.
+   - Return the MOST SPECIFIC location you can defend from the text. NEVER invent or guess an address.
+   - The "City (from search context)" above is just a search keyword — the real project may be in a different town entirely. Trust the article text, not the search context.
+   - If no location is extractable, return null.
 
 **Respond in JSON format ONLY:**
 {{
@@ -43,7 +48,9 @@ Qualify this project against these criteria:
   "reasoning": "string (1-2 sentences)",
   "ground_floor_available": true|false|null,
   "estimated_sqm": number|null,
-  "accessibility_noted": true|false|null
+  "accessibility_noted": true|false|null,
+  "extracted_location": "string with most specific location from the text, or null",
+  "location_in_germany": true|false|null
 }}"""
 
 
@@ -66,13 +73,140 @@ def _parse_json_response(text):
     raise ValueError('No JSON object found in response')
 
 
+# ----- Nominatim geocoding with disk cache --------------------------------
+_GEOCODE_CACHE: dict = None
+_GEOCODE_CACHE_PATH = None
+
+
+def _load_geocode_cache():
+    global _GEOCODE_CACHE, _GEOCODE_CACHE_PATH
+    if _GEOCODE_CACHE is not None:
+        return _GEOCODE_CACHE
+    import os
+    _GEOCODE_CACHE_PATH = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'output',
+        'geocode_cache.json',
+    )
+    try:
+        with open(_GEOCODE_CACHE_PATH, 'r', encoding='utf-8') as f:
+            _GEOCODE_CACHE = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        _GEOCODE_CACHE = {}
+    return _GEOCODE_CACHE
+
+
+def _save_geocode_cache():
+    if _GEOCODE_CACHE is None or _GEOCODE_CACHE_PATH is None:
+        return
+    try:
+        import os
+        os.makedirs(os.path.dirname(_GEOCODE_CACHE_PATH), exist_ok=True)
+        with open(_GEOCODE_CACHE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_GEOCODE_CACHE, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def geocode_with_nominatim(query: str) -> dict:
+    """
+    Geocode a free-text location via Nominatim (OpenStreetMap).
+    Returns: {
+        'lat': float, 'lng': float,
+        'display_name': str, 'class': str, 'type': str,
+        'importance': float,
+        'precision': 'address'|'street'|'district'|'city'|'unverified',
+        'verified': bool,
+    }
+    or {'verified': False, 'reason': '...'} if no usable result.
+
+    Respects Nominatim's 1-req-per-second rate limit. Cached aggressively.
+    """
+    import time, requests
+    if not query or not isinstance(query, str):
+        return {'verified': False, 'reason': 'empty query'}
+
+    key = query.strip().lower()
+    cache = _load_geocode_cache()
+    if key in cache:
+        return cache[key]
+
+    headers = {
+        'User-Agent': 'Aerztehaus-Radar/0.1 (case study; +https://github.com/ERIC10000/ray-ai-physiotherapy--case-study)',
+        'Accept': 'application/json',
+    }
+    params = {
+        'q': query,
+        'format': 'json',
+        'limit': '1',
+        'countrycodes': 'de',
+        'addressdetails': '1',
+    }
+    try:
+        # Polite rate-limiting — Nominatim TOS asks for max 1 req/sec
+        time.sleep(1.0)
+        r = requests.get('https://nominatim.openstreetmap.org/search', params=params, headers=headers, timeout=10)
+        r.raise_for_status()
+        results = r.json()
+    except Exception as e:
+        result = {'verified': False, 'reason': f'{type(e).__name__}: {e}'}
+        cache[key] = result
+        _save_geocode_cache()
+        return result
+
+    if not results:
+        result = {'verified': False, 'reason': 'no nominatim match'}
+        cache[key] = result
+        _save_geocode_cache()
+        return result
+
+    top = results[0]
+    addr = top.get('address') or {}
+    osm_class = top.get('class', '')
+    osm_type = top.get('type', '')
+    importance = float(top.get('importance', 0) or 0)
+
+    # Classify precision based on what OSM matched
+    if osm_class in ('building', 'amenity', 'shop', 'office') or osm_type in ('house', 'building'):
+        precision = 'address'
+    elif osm_class == 'highway' or osm_type in ('road', 'street', 'residential'):
+        precision = 'street'
+    elif osm_type in ('suburb', 'neighbourhood', 'quarter', 'borough', 'city_district'):
+        precision = 'district'
+    elif osm_type in ('city', 'town', 'village', 'municipality'):
+        precision = 'city'
+    else:
+        precision = 'unverified'
+
+    result = {
+        'verified': precision in ('address', 'street', 'district'),
+        'precision': precision,
+        'lat': float(top['lat']),
+        'lng': float(top['lon']),
+        'display_name': top.get('display_name', ''),
+        'class': osm_class,
+        'type': osm_type,
+        'importance': importance,
+        'matched_city': addr.get('city') or addr.get('town') or addr.get('village') or addr.get('municipality') or '',
+        'matched_state': addr.get('state') or '',
+    }
+    cache[key] = result
+    _save_geocode_cache()
+    return result
+
+
 def _to_qualification_dict(name, city, source, url, description, parsed):
-    """Convert parsed JSON into the dashboard's expected lead shape."""
+    """Convert parsed JSON into the dashboard's expected lead shape, geocoding the extracted location."""
     gf = parsed.get('ground_floor_available')
     acc = parsed.get('accessibility_noted')
+
+    extracted_location = parsed.get('extracted_location') or ''
+    geo = geocode_with_nominatim(extracted_location) if extracted_location else {'verified': False, 'reason': 'no location extracted'}
+
+    result_city = geo.get('matched_city') or city
     return {
         'Name': name,
-        'City': city,
+        'City': result_city,
         'Source': source,
         'URL': url,
         'Description': description,
@@ -86,6 +220,13 @@ def _to_qualification_dict(name, city, source, url, description, parsed):
         'Ground Floor': 'Yes' if gf else ('No' if gf is False else 'Unknown'),
         'Est. Size (sqm)': parsed.get('estimated_sqm') or 'Unknown',
         'Accessibility': 'Yes' if acc else ('No' if acc is False else 'Unknown'),
+        # ----- Geographic verification fields -----
+        'Extracted Location': extracted_location,
+        'Geocoded Address': geo.get('display_name', ''),
+        'Geocode Precision': geo.get('precision', 'unverified'),
+        'Location Verified': geo.get('verified', False),
+        'Latitude': geo.get('lat'),
+        'Longitude': geo.get('lng'),
     }
 
 
